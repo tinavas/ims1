@@ -1,0 +1,965 @@
+<?php
+$start_process = (float) array_sum(explode(' ',microtime()));
+ session_start(); $flockget = $_SESSION['flockcode']; 
+ $breedi = $_SESSION['breedi'] ;
+include "../config.php";
+$startfemale = 0;
+$startmale = 0;
+
+$query1 = "SELECT * FROM breeder_flock WHERE flockcode like '%$flockget' ";
+$result1 = mysql_query($query1,$conn); 
+$tcount = mysql_num_rows($result1);
+
+if($tcount > 1)
+{
+   $query1 = "SELECT sum(femaleopening) as femaleopening,sum(maleopening) as maleopening,min(age) as age,min(startdate) as startdate  FROM breeder_flock WHERE flockcode like '%$flockget' ";
+  $result1 = mysql_query($query1,$conn); 
+  while($row11 = mysql_fetch_assoc($result1))  
+  {
+      $startdate = $row11['startdate'];
+      $startage = $row11['age'];
+      $startfemale = $row11['femaleopening'];
+      $startmale =   $row11['maleopening'];
+  }
+}
+else
+{
+$query1 = "SELECT femaleopening,maleopening,age,startdate FROM breeder_flock WHERE flockcode like '%$flockget' ";
+  $result1 = mysql_query($query1,$conn); 
+  while($row11 = mysql_fetch_assoc($result1))  
+  {
+      $startdate = $row11['startdate'];
+      $startage = $row11['age'];
+      $startfemale =  $row11['femaleopening'];
+      $startmale = $row11['maleopening'];
+  }
+}
+/*else
+{
+  $query1 = "SELECT * FROM breeder_flock WHERE flockcode like '%$flockget'";
+  $result1 = mysql_query($query1,$conn); 
+  while($row11 = mysql_fetch_assoc($result1))  
+  {
+      $startdate = $row11['startdate'];
+      $startage = $row11['age'];
+      $startfemale = $startfemale + $row11['femaleopening'];
+      $startmale = $startmale + $row11['maleopening'];
+  }
+}*/
+
+ $querymin = "SELECT min(date2) as 'date2' FROM breeder_consumption WHERE flock like '$flockget' ";
+$resultmin = mysql_query($querymin,$conn); 
+while($row1min = mysql_fetch_assoc($resultmin))
+{
+$mincmpdate = $row1min['date2'];
+}
+
+ $femalet = 0;$malet=0;
+ $query1t = "SELECT * FROM `pp_sobi` WHERE code in (select distinct(code) from ims_itemcodes where cat ='Female Birds') AND client = '$client' AND flock like '%$flockget' AND date<'$mincmpdate'";
+  $result1t = mysql_query($query1t,$conn); 
+  while($row11t = mysql_fetch_assoc($result1t))  
+  {
+	  $femalet = $femalet + $row11t['receivedquantity'];
+  }
+   $query1t = "SELECT * FROM `pp_sobi` WHERE code in (select distinct(code) from ims_itemcodes where cat ='Male Birds') AND client = '$client' AND flock like '%$flockget' AND date<'$mincmpdate'";
+  $result1t = mysql_query($query1t,$conn); 
+  while($row11t = mysql_fetch_assoc($result1t))  
+  {
+	  $malet = $malet + $row11t['receivedquantity'];
+  }
+   if($femalet > 0)
+  {
+  $startfemale = $startfemale +$femalet;
+  }
+   if($malet > 0)
+  {
+  $startmale = $startmale + $malet;
+  }
+  
+   $query1t = "SELECT sum(quantity) as quantity  FROM `ims_stocktransfer` WHERE cat ='Female Birds' AND  towarehouse like '%$flockget' and fromwarehouse not like '%$flockget' AND date < '$mincmpdate' ";
+    $result1t = mysql_query($query1t,$conn); 
+  	while($row11t = mysql_fetch_assoc($result1t))  
+  	{
+	// echo "female tr in    ";echo 
+	$startfemale = $startfemale + $row11t['quantity'];
+	}
+	   $query1t = "SELECT sum(quantity) as quantity  FROM `ims_stocktransfer` WHERE cat= 'Male Birds' AND  towarehouse like '%$flockget' and fromwarehouse not like '%$flockget' AND date < '$mincmpdate'  ";
+    $result1t = mysql_query($query1t,$conn); 
+  	while($row11t = mysql_fetch_assoc($result1t))  
+  	{
+      
+	  //echo "male tr in    ";echo 
+	  $startmale = $startmale + $row11t['quantity'];
+	  }
+
+
+
+if($breedi != "")
+{
+$query34 = "SELECT * FROM breeder_standards where client = '$client' and breed ='$breedi' ORDER BY age ASC ";
+}
+else
+{
+$query34 = "SELECT * FROM breeder_standards where client = '$client' ORDER BY age ASC ";
+}
+$result34 = mysql_query($query34,$conn); 
+while($row134 = mysql_fetch_assoc($result34))
+{ 
+ // $stdmort[$row134['age']] = $row134['fcummmort'];
+ $stdhdper[$row134['age']] = $row134['productionper'];
+ // $stdeggbird[$row134['age']] = $row134['alleggbird'];
+//  $stdheggbird[$row134['age']] = $row134['eggbird'];
+  $stdheggper[$row134['age']] = $row134['heggper'];
+ // $stdeggwt[$row134['age']] = $row134['eggwt'];
+  if($row134['age'] > 23)
+  {
+   $stdffeed[$row134['age']] = $row134['ffeed'];
+   $stdmfeed[$row134['age']] = $row134['mfeed'];
+  }
+  $stdmort[$row134['age']] = $row134['fcummmort'];
+  $stdcumhhp[$row134['age']] = $row134['cumhhp'];
+  $stdcumhhe[$row134['age']] = $row134['cumhhe'];
+  $stdfweight[$row134['age']] = $row134['fweight'];
+  $stdmweight[$row134['age']] = $row134['mweight'];
+  $stdeggwt[$row134['age']] = $row134['eggwt'];
+}
+
+if($breedi != "")
+{
+$query34 = "SELECT * FROM breeder_standards where client = '$client' and breed='$breedi' ORDER BY age ASC ";
+}
+else
+{
+$query34 = "SELECT * FROM breeder_standards where client = '$client' ORDER BY age ASC ";
+}
+
+$result34 = mysql_query($query34,$conn); 
+while($row134 = mysql_fetch_assoc($result34))
+{ 
+  $stdfw[$row134['age']] = $row134['fweight'];
+  $stdmw[$row134['age']] = $row134['mweight'];
+  if($row134['age'] < 24)
+  {
+   $stdffeed[$row134['age']] = $row134['ffeed'];
+   $stdmfeed[$row134['age']] = $row134['mfeed'];
+  }
+}
+
+$query1 = "SELECT min(date1) as 'date1' FROM breeder_production WHERE flock like '%$flockget'";
+$result1 = mysql_query($query1,$conn); 
+while($row11 = mysql_fetch_assoc($result1))
+{
+  $prodate = $row11['date1'];
+}
+$query1 = "SELECT max(date2) as 'date2' FROM breeder_consumption WHERE flock like '%$flockget'";
+$result1 = mysql_query($query1,$conn); 
+while($row11 = mysql_fetch_assoc($result1))
+{
+  $condate = $row11['date2'];
+}
+if($prodate)
+{
+$prodate = $prodate;
+}
+else
+{
+$prodate = $condate;
+}
+
+  $diffdate11 = strtotime($prodate) - strtotime($startdate);
+  $diffdate11 = $diffdate11/(24*60*60);   
+  $newage11 = $startage + $diffdate11;
+  $nrSeconds = $newage11 * 24 * 60 * 60;
+  $nrDaysPassed = floor($nrSeconds / 86400) % 7;  
+  $newage11 = floor($nrSeconds / 604800) + 1; 
+  $untildate = strtotime($prodate) - ($nrDaysPassed * 60 * 24 * 24);
+  $untildate = date("Y-m-d",$untildate);
+
+
+$nrSeconds = $startage * 24 * 60 * 60;
+$startweeks = floor($nrSeconds / 604800); 
+if($startweeks == 0)
+{
+$startweeks =1;
+}
+
+$e = 1;
+$eggtype[0] = "dummy";
+$query = "SELECT * FROM ims_itemcodes WHERE cat In ('Eggs','Hatch Eggs')";
+$result = mysql_query($query,$conn); 
+while($row1 = mysql_fetch_assoc($result))
+{ 
+  $eggtype[$e] = $row1['code'];
+  $e = $e + 1;
+}
+
+$h = 1;
+$hatcheggtype[0] = "dummy";
+$query = "SELECT * FROM ims_itemcodes WHERE cat = 'Hatch Eggs'";
+$result = mysql_query($query,$conn); 
+while($row1 = mysql_fetch_assoc($result))
+{ 
+  $hatcheggtype[$h] = $row1['code'];
+  $h = $h + 1;
+}
+
+
+$ff= 1;
+$ffeedtype[0] = "dummy";
+$query = "SELECT * FROM ims_itemcodes WHERE cat = 'Female Feed'";
+$result = mysql_query($query,$conn); 
+while($row1 = mysql_fetch_assoc($result))
+{ 
+  $ffeedtype[$ff] = $row1['code'];
+  $ff = $ff + 1;
+}
+
+$mf= 1;
+$mfeedtype[0] = "dummy";
+$query = "SELECT * FROM ims_itemcodes WHERE cat = 'Male Feed'";
+$result = mysql_query($query,$conn); 
+while($row1 = mysql_fetch_assoc($result))
+{ 
+  $mfeedtype[$mf] = $row1['code'];
+  $mf = $mf + 1;
+}
+
+$weekffeed = 0;
+$weekmfeed = 0;
+$frem = 0;
+$mrem = 0;
+$frem1 = 0;
+$mrem1 = 0;
+$weekf = 0;
+$weekm = 0;
+$weekfemale = $startfemale;
+$query = "SELECT * FROM breeder_consumption WHERE flock like '%$flockget' GROUP BY date2 ORDER BY date2 ASC";
+$result = mysql_query($query,$conn); 
+while($row1 = mysql_fetch_assoc($result))
+{
+  $diffdate = strtotime($row1['date2']) - strtotime($startdate);
+  $diffdate = $diffdate/(24*60*60);   
+  $newage = $startage + $diffdate;
+  $nrSeconds = $newage * 24 * 60 * 60;
+  $nrDaysPassed = floor($nrSeconds / 86400) % 7;  
+  $nrWeeksPassed = floor($nrSeconds / 604800); 
+  $fdayfeed = 0;$mdayfeed = 0;
+
+  
+  $query1 = "SELECT * FROM breeder_consumption WHERE flock like '%$flockget' and date2 = '$row1[date2]' ORDER BY date2 ASC";
+  $result1 = mysql_query($query1,$conn); 
+  while($row11 = mysql_fetch_assoc($result1))
+  {
+     if(array_search($row11['itemcode'],$ffeedtype))
+     {
+           $fdayfeed = $fdayfeed + $row11['quantity'];
+     }
+     if(array_search($row11['itemcode'],$mfeedtype))
+     {
+           $mdayfeed = $mdayfeed + $row11['quantity'];
+     }
+  }
+  $weekffeed = $weekffeed + $fdayfeed;
+  $weekmfeed = $weekmfeed + $mdayfeed;
+  $weekf = $weekf + (round(($fdayfeed / ($startfemale - $frem)*1000),3));  
+  $weekm = $weekm + (round(($mdayfeed / ($startmale - $mrem)*1000),3));
+
+
+
+
+  $tdayeggs = 0;
+  $tdayhatcheggs = 0;
+  $mdayfeed = 0;
+  $fdayfeed = 0;
+  $query1 = "SELECT * FROM breeder_production WHERE flock like '%$flockget' and date1 = '$row1[date2]' ORDER BY date1 ASC";
+  $result1 = mysql_query($query1,$conn); 
+  while($row11 = mysql_fetch_assoc($result1))
+  {
+     if(array_search($row11['itemcode'],$eggtype))
+     {
+        $tdayeggs = $tdayeggs + $row11['quantity'];        
+        for($i = 0;$i < sizeof($rejections); $i++)
+        {
+            if($row11['itemcode'] == $rejections[$i])
+              $rejectionsqty[$i] = $row11['quantity'];
+        }
+        if(array_search($row11['itemcode'],$hatcheggtype))
+        {
+           $tdayhatcheggs = $tdayhatcheggs + $row11['quantity'];        
+        }
+     }
+  }
+  $teggs = $teggs + $tdayeggs;
+  $weekeggs = $weekeggs + $tdayeggs; 
+  $thatcheggs = $thatcheggs + $tdayhatcheggs;
+  $weekhatcheggs = $weekhatcheggs + $tdayhatcheggs;
+  
+  $frem = $frem + $row1['fmort'] + $row1['fcull'];
+  $mrem = $mrem + $row1['mmort'] + $row1['mcull'];
+
+  $frem1 = $frem1 + $row1['fmort'];
+  $mrem1 = $mrem1 + $row1['mmort'];
+
+  if($nrDaysPassed == 0)
+  {
+    $fwa[$nrWeeksPassed] = $row1['fweight'];
+    $fwb[$nrWeeksPassed] = $row1['fweightb'];
+    $fwc[$nrWeeksPassed] = $row1['fweightc'];
+    $fwd[$nrWeeksPassed] = $row1['fweightd'];
+
+    $mwa[$nrWeeksPassed] = $row1['mweight'];
+    $mwb[$nrWeeksPassed] = $row1['mweightb'];
+    $mwc[$nrWeeksPassed] = $row1['mweightc'];
+    $mwd[$nrWeeksPassed] = $row1['mweightd'];
+
+    $fwx = 0; 
+    if($row1['fweight']) { $fwx = $fwx + 1; } 
+    if($row1['fweightb']) { $fwx = $fwx + 1; }
+    if($row1['fweightc']) { $fwx = $fwx + 1; }
+    if($row1['fweightd']) { $fwx = $fwx + 1; }
+
+    $mwx = 0; 
+    if($row1['mweight']) { $mwx = $mwx + 1; } 
+    if($row1['mweightb']) { $mwx = $mwx + 1; }
+    if($row1['mweightc']) { $mwx = $mwx + 1; }
+    if($row1['mweightd']) { $mwx = $mwx + 1; }
+
+    $favg[$nrWeeksPassed] = ($row1['fweight'] + $row1['fweightb'] + $row1['fweightc'] + $row1['fweightd'])/$fwx;
+    $mavg[$nrWeeksPassed] = ($row1['mweight'] + $row1['mweightb'] + $row1['mweightc'] + $row1['mweightd'])/$mwx;
+
+   // $eggwt[$nrWeeksPassed] = $row1['eggwt'];
+   // $fmortper[$nrWeeksPassed] = ($frem1 / $startfemale) * 100;
+   // $mmortper[$nrWeeksPassed] = ($mrem1 / $startmale) * 100;
+    $weekffeed1[$nrWeeksPassed] = round($weekf/7,2);
+    $weekmfeed1[$nrWeeksPassed] = round($weekm/7,2);
+   // $weekeggs1[$nrWeeksPassed] = round((($weekeggs/7)/$weekfemale)*100,2); 
+   // $weekheggs1[$nrWeeksPassed] = round(($weekhatcheggs/$weekeggs)*100,2); 
+   // $hhe[$nrWeeksPassed] = round(($teggs/($startfemale - $frem)),2); 
+   // $hhhe[$nrWeeksPassed] = round(($thatcheggs/($startfemale - $frem)),2); 
+    $weekffeed = 0;
+    $weekmfeed = 0;
+    $weekf = 0;
+    $weekm = 0;
+    $weekeggs = 0;
+    $weekhatcheggs = 0;
+    $weekfemale = $startfemale - $frem;
+  }
+
+
+
+
+}
+
+?>
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=us-ascii">
+<meta name=ProgId content=Excel.Sheet>
+<meta name=Generator content="Microsoft Excel 12">
+<link id=Main-File rel=Main-File href=newreport.php>
+<link rel=File-List href="newreport_filelist.xml">
+<link rel=Stylesheet href="newreport_stylesheet.css">
+<style>
+<!--table
+	{mso-displayed-decimal-separator:"\.";
+	mso-displayed-thousand-separator:"\,";}
+@page
+	{margin:1.0in 1.0in 3.5in 1.0in;
+	mso-header-margin:1.0in;
+	mso-footer-margin:1.0in;
+	mso-page-orientation:landscape;}
+-->
+</style>
+<![if !supportTabStrip]>
+<SCRIPT LANGUAGE="JavaScript">
+NavName = navigator.appName.substring(0,3);
+NavVersion = navigator.appVersion.substring(0,1);
+if (NavName != "Mic" || NavVersion>=4)
+	{
+	entree = new Date;
+	entree = entree.getTime();
+	}
+
+function calculateloadgingtime()
+	{
+	if (NavName != "Mic" || NavVersion>=4)
+		{
+		fin = new Date;
+		fin = fin.getTime();
+		secondes = (fin-entree)/1000;
+		var exetime11 = document.getElementById("exetime1").value;
+		secondes = parseFloat(secondes) + parseFloat(exetime11);
+	    secondes =  secondes.toFixed(3);
+		window.status='Page loaded in ' + secondes + ' seconde(s).';
+		document.getElementById("loadgingpage").innerHTML = "(Page loaded in " + secondes + " second(s).)";
+		}
+	}
+window.onload = calculateloadgingtime;
+
+</SCRIPT>
+
+<script language="JavaScript">
+<!--
+function fnUpdateTabs()
+ {
+  if (parent.window.g_iIEVer>=4) {
+   if (parent.document.readyState=="complete"
+    && parent.frames['frTabs'].document.readyState=="complete")
+   parent.fnSetActiveSheet(3);
+  else
+   window.setTimeout("fnUpdateTabs();",150);
+ }
+}
+
+if (window.name!="frSheet")
+ window.location.replace("newreport.php");
+else
+ fnUpdateTabs();
+//-->
+</script>
+<![endif]>
+</head>
+
+<body link=blue vlink=purple class=xl577>
+
+<center><div id="loadingimg" >
+<table>
+<tr >
+<td valign="bottom"><img src="../images/mask-loader.gif" align="bottom"/></td><td valign="top" align="center" style="text-align:center">(Please wait report is loading)</td>
+</tr>
+</table>
+</div></center>
+
+<center>
+  <table><tr><td style="font-size:13px"><b>Breeder Performance Summary For Flock <?php session_start(); echo $_SESSION['displayflock']; ?></b></td></tr></table>
+</center>
+
+<table border=0 cellpadding=0 cellspacing=0 width=1227 style='border-collapse:
+ collapse;table-layout:fixed;width:922pt'>
+ <col class=xl577 width=55 style='mso-width-source:userset;mso-width-alt:2011;
+ width:41pt'>
+ <col class=xl577 width=35 style='mso-width-source:userset;mso-width-alt:1280;
+ width:26pt'>
+ <col class=xl613 width=45 style='mso-width-source:userset;mso-width-alt:1645;
+ width:34pt'>
+ <col class=xl577 width=45 style='mso-width-source:userset;mso-width-alt:1645;
+ width:34pt'>
+ <col class=xl611 width=35 style='mso-width-source:userset;mso-width-alt:1280;
+ width:26pt'>
+ <col class=xl577 width=39 style='mso-width-source:userset;mso-width-alt:1426;
+ width:29pt'>
+ <col class=xl577 width=56 style='mso-width-source:userset;mso-width-alt:2048;
+ width:42pt'>
+ <col class=xl613 width=49 style='mso-width-source:userset;mso-width-alt:1792;
+ width:37pt'>
+ <col class=xl611 width=46 style='mso-width-source:userset;mso-width-alt:1682;
+ width:35pt'>
+ <col class=xl577 width=54 style='mso-width-source:userset;mso-width-alt:1609;
+ width:43pt'>
+ <col class=xl611 width=46 style='mso-width-source:userset;mso-width-alt:1682;
+ width:35pt'>
+ <col class=xl613 width=45 style='mso-width-source:userset;mso-width-alt:1645;
+ width:34pt'>
+ <col class=xl611 width=33 style='mso-width-source:userset;mso-width-alt:1206;
+ width:25pt'>
+ <col class=xl613 width=49 style='mso-width-source:userset;mso-width-alt:1792;
+ width:37pt'>
+ <col class=xl611 width=35 style='mso-width-source:userset;mso-width-alt:1280;
+ width:26pt'>
+ <col class=xl613 width=35 style='mso-width-source:userset;mso-width-alt:1280;
+ width:26pt'>
+ <col class=xl577 width=39 style='mso-width-source:userset;mso-width-alt:1426;
+ width:29pt'>
+ <col class=xl611 width=35 style='mso-width-source:userset;mso-width-alt:1280;
+ width:26pt'>
+ <col class=xl577 width=35 style='mso-width-source:userset;mso-width-alt:1280;
+ width:26pt'>
+ <col class=xl577 width=50 style='mso-width-source:userset;mso-width-alt:1828;
+ width:38pt'>
+ <col class=xl577 width=56 style='mso-width-source:userset;mso-width-alt:2048;
+ width:42pt'>
+ <col class=xl577 width=52 style='mso-width-source:userset;mso-width-alt:1901;
+ width:39pt'>
+ <col class=xl577 width=36 style='mso-width-source:userset;mso-width-alt:1316;
+ width:27pt'>
+ <col class=xl577 width=46 style='mso-width-source:userset;mso-width-alt:1682;
+ width:35pt'>
+ <col class=xl577 width=28 span=2 style='mso-width-source:userset;mso-width-alt:
+ 1024;width:21pt'>
+ <col class=xl577 width=49 style='mso-width-source:userset;mso-width-alt:1792;
+ width:37pt'>
+ <col class=xl577 width=81 style='mso-width-source:userset;mso-width-alt:2962;
+ width:61pt'>
+ <tr height=27 style='mso-height-source:userset;height:20.25pt'>
+  <td colspan=27 height=27 class=xl762 width=1146 style='height:20.25pt;
+  width:861pt'><a name="Print_Area"><span
+  style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  </span></a></td>
+  <td class=xl577 width=81 style='width:61pt'></td>
+ </tr>
+ <tr height=24 style='mso-height-source:userset;height:18.0pt'>
+  <td colspan=4 height=24 class=xl578 style='height:18.0pt'>Farm name</td>
+  <td colspan=4 class=xl578 style='border-left:none'>&nbsp;</td>
+  <td colspan=2 class=xl578 style='border-left:none'>Hen Housed</td>
+  <td colspan=2 class=xl578 style='border-left:none'>&nbsp;</td>
+  <td colspan=2 class=xl578 style='border-left:none'>&nbsp;</td>
+  <td class=xl579 style='border-left:none'>&nbsp;</td>
+  <td class=xl579 style='border-left:none'>&nbsp;</td>
+  <td class=xl579 style='border-left:none'>&nbsp;</td>
+  <td class=xl579 style='border-left:none'>&nbsp;</td>
+  <td class=xl579 style='border-left:none'>&nbsp;</td>
+  <td class=xl579 style='border-left:none'>&nbsp;</td>
+  <td class=xl579 style='border-left:none'>&nbsp;</td>
+  <td class=xl579 style='border-left:none'>&nbsp;</td>
+  <td class=xl579 style='border-left:none'>&nbsp;</td>
+  <td class=xl579 style='border-left:none'>&nbsp;</td>
+  <td class=xl579 style='border-left:none'>&nbsp;</td>
+  <td class=xl579 style='border-left:none'>&nbsp;</td>
+  <td class=xl579 style='border-left:none'>&nbsp;</td>
+  <td class=xl577></td>
+ </tr>
+ <tr height=19 style='mso-height-source:userset;height:14.25pt'>
+  <td height=19 class=xl580 style='height:14.25pt;border-top:none'>&nbsp;</td>
+  <td colspan=7 class=xl581 style='border-left:none'>FEMALE BODY WEIGHT</td>
+  <td colspan=6 class=xl581 style='border-left:none'>FEED PER BIRD PER DAY</td>
+  <td colspan=7 class=xl581 style='border-left:none'>MALE BODY WEIGHT</td>
+  <td colspan=6 class=xl581 style='border-left:none'>FEED PER BIRD PER DAY</td>
+  <td class=xl577></td>
+ </tr>
+ <tr height=19 style='mso-height-source:userset;height:14.25pt'>
+  <td height=19 class=xl580 style='height:14.25pt;border-top:none'>AGE</td>
+  <td class=xl593 style='border-top:none;border-left:none'>STD</td>
+  <td colspan=4 class=xl602 style='border-left:none'>ACTUAL</td>
+  <td class=xl580 style='border-top:none;border-left:none'>&nbsp;</td>
+  <td class=xl604 style='border-top:none;border-left:none'>GAIN</td>
+  <td class=xl593 style='border-top:none;border-left:none'>STD</td>
+  <td colspan=5 class=xl602 style='border-left:none'>ACTUAL</td>
+  <td class=xl593 style='border-top:none;border-left:none'>STD</td>
+  <td colspan=4 class=xl602 style='border-left:none'>ACTUAL</td>
+  <td class=xl580 style='border-top:none;border-left:none'>&nbsp;</td>
+  <td class=xl604 style='border-top:none;border-left:none'>WT</td>
+  <td class=xl593 style='border-top:none;border-left:none'>STD</td>
+  <td colspan=4 class=xl764 style='border-left:none'>ACTUAL</td>
+  <td class=xl619 style='border-top:none'>&nbsp;</td>
+  <td class=xl577></td>
+ </tr>
+ <tr height=19 style='mso-height-source:userset;height:14.25pt'>
+  <td height=19 class=xl580 style='height:14.25pt;border-top:none'>&nbsp;</td>
+  <td class=xl593 style='border-top:none;border-left:none'>&nbsp;</td>
+  <td class=xl602 style='border-top:none;border-left:none'>A</td>
+  <td class=xl602 style='border-top:none;border-left:none'>B</td>
+  <td class=xl602 style='border-top:none;border-left:none'>C</td>
+  <td class=xl602 style='border-top:none;border-left:none'>D</td>
+  <td class=xl603 style='border-top:none;border-left:none'>AVG</td>
+  <td class=xl604 style='border-top:none;border-left:none'>GRAM</td>
+  <td class=xl593 style='border-top:none;border-left:none'>&nbsp;</td>
+  <td class=xl602 style='border-top:none;border-left:none'>A</td>
+  <td class=xl602 style='border-top:none;border-left:none'>B</td>
+  <td class=xl602 style='border-top:none;border-left:none'>C</td>
+  <td class=xl602 style='border-top:none;border-left:none'>D</td>
+  <td class=xl603 style='border-top:none;border-left:none'>AVG</td>
+  <td class=xl593 style='border-top:none;border-left:none'>&nbsp;</td>
+  <td class=xl602 style='border-top:none;border-left:none'>A</td>
+  <td class=xl602 style='border-top:none;border-left:none'>B</td>
+  <td class=xl602 style='border-top:none;border-left:none'>C</td>
+  <td class=xl602 style='border-top:none;border-left:none'>D</td>
+  <td class=xl603 style='border-top:none;border-left:none'>AVG</td>
+  <td class=xl604 style='border-top:none;border-left:none'>GAIN</td>
+  <td class=xl593 style='border-top:none;border-left:none'>&nbsp;</td>
+  <td class=xl602 style='border-top:none;border-left:none'>A</td>
+  <td class=xl602 style='border-top:none;border-left:none'>B</td>
+  <td class=xl602 style='border-top:none;border-left:none'>C</td>
+  <td class=xl602 style='border-top:none;border-left:none'>D</td>
+  <td class=xl603 style='border-top:none;border-left:none'>AVG</td>
+  <td class=xl577></td>
+ </tr>
+ <tr height=19 style='mso-height-source:userset;height:14.25pt'>
+  <td height=19 class=xl585 style='height:14.25pt;border-top:none'>BROOD</td>
+  <td class=xl592 style='border-top:none'>&nbsp;</td>
+  <td class=xl582 style='border-left:none'>&nbsp;</td>
+  <td class=xl582 style='border-left:none'>&nbsp;</td>
+  <td class=xl583 style='border-left:none'>&nbsp;</td>
+  <td class=xl583 style='border-left:none'>&nbsp;</td>
+  <td class=xl583 style='border-left:none'>&nbsp;</td>
+  <td class=xl583 style='border-left:none'>&nbsp;</td>
+  <td class=xl605 style='border-left:none'>&nbsp;</td>
+  <td class=xl606 style='border-left:none'>&nbsp;</td>
+  <td class=xl606 style='border-left:none'>&nbsp;</td>
+  <td class=xl606 style='border-left:none'>&nbsp;</td>
+  <td class=xl607 style='border-left:none'>&nbsp;</td>
+  <td class=xl625 style='border-left:none'>&nbsp;</td>
+  <td class=xl608 style='border-left:none'>&nbsp;</td>
+  <td class=xl612 style='border-left:none'>&nbsp;</td>
+  <td class=xl612>&nbsp;</td>
+  <td class=xl612>&nbsp;</td>
+  <td class=xl612>&nbsp;</td>
+  <td class=xl615 style='border-top:none'>&nbsp;</td>
+  <td class=xl617 style='border-left:none'>&nbsp;</td>
+  <td class=xl609>&nbsp;</td>
+  <td class=xl621>&nbsp;</td>
+  <td class=xl614 style='border-top:none;border-left:none'>&nbsp;</td>
+  <td class=xl614 style='border-top:none;border-left:none'>&nbsp;</td>
+  <td class=xl614 style='border-top:none;border-left:none'>&nbsp;</td>
+  <td class=xl623 style='border-top:none;border-left:none'>&nbsp;</td>
+  <td class=xl577></td>
+ </tr>
+ 
+
+<?php 
+/*for($bage = $startweeks + 1;$bage < $newage11;$bage++) {*/
+for($bage = $startweeks ;$bage < $newage11-1;$bage++) {
+?>
+<tr height=19 style='mso-height-source:userset;height:14.25pt'>
+  <td height=19 class=xl584 style='height:14.25pt;border-top:none'><?php echo $bage; ?></td>
+  <td class=xl594 style='border-top:none;border-left:none'><?php echo $stdfw[$bage]; ?></td>
+  <td class=xl595 style='border-top:none;border-left:none'><?php echo $fwa[$bage]; ?></td>
+  <td class=xl596 style='border-top:none;border-left:none'><?php echo $fwb[$bage]; ?></td>
+  <td class=xl597 style='border-top:none;border-left:none'><?php echo $fwc[$bage]; ?></td>
+  <td class=xl597 style='border-top:none;border-left:none'><?php echo $fwd[$bage]; ?></td>
+  <td class=xl599 style='border-top:none;border-left:none'><?php if($favg[$bage]) { echo $favg[$bage]; } else { echo 0; } ?></td>
+  <td class=xl601 style='border-top:none;border-left:none'><?php echo $favg[$bage] - $favg[$bage-1]; ?></td>
+  <td class=xl594 style='border-top:none;border-left:none'><?php echo $stdffeed[$bage]; ?></td>
+  <td class=xl597 style='border-top:none;border-left:none'>-</td>
+  <td class=xl597 style='border-top:none;border-left:none'>-</td>
+  <td class=xl597 style='border-top:none;border-left:none'>-</td>
+  <td class=xl597 style='border-top:none;border-left:none'>-</td>
+  <td class=xl668 style='border-top:none;border-left:none'><?php echo $weekffeed1[$bage]; ?></td>
+  <td class=xl594 style='border-top:none;border-left:none'><?php echo $stdmw[$bage]; ?></td>
+  <td class=xl598 style='border-top:none;border-left:none'><?php echo $mwa[$bage]; ?></td>
+  <td class=xl598 style='border-top:none'><?php echo $mwb[$bage]; ?></td>
+  <td class=xl598 style='border-top:none'><?php echo $mwc[$bage]; ?></td>
+  <td class=xl598 style='border-top:none'><?php echo $mwd[$bage]; ?></td>
+  <td class=xl616><?php if($mavg[$bage]) { echo $mavg[$bage]; } else { echo 0; } ?></td>
+  <td class=xl618 style='border-top:none;border-left:none'><?php echo $mavg[$bage] - $mavg[$bage-1]; ?></td>
+  <td class=xl610 style='border-top:none'><?php echo $stdmfeed[$bage]; ?></td>
+  <td class=xl622>-</td>
+  <td class=xl622 style='border-top:none;border-left:none'>-</td>
+  <td class=xl622 style='border-top:none;border-left:none'>-</td>
+  <td class=xl622 style='border-top:none;border-left:none'>-</td>
+  <td class=xl624 style='border-top:none;border-left:none'><?php echo $weekmfeed1[$bage]; ?></td>
+  <td class=xl577></td>
+ </tr>
+<?php } ?>
+
+
+
+
+ <tr class=xl128 height=19 style='mso-height-source:userset;height:14.25pt'>
+  <td height=19 class=xl585 style='height:14.25pt;border-top:none'>LAYING</td>
+  <td colspan=27 class=xl128 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=19 style='page-break-before:always;mso-height-source:userset;
+  height:14.25pt'>
+  <td height=19 class=xl578 style='height:14.25pt;border-top:none'>AGE</td>
+  <td colspan=3 class=xl578 style='border-left:none'>F.MORTALITY%</td>
+  <td colspan=2 class=xl578 style='border-left:none'>HEN DAY%</td>
+  <td colspan=2 class=xl578 style='border-left:none'>HE %</td>
+  <td colspan=2 class=xl578 style='border-left:none'>HHE</td>
+  <td colspan=2 class=xl578 style='border-left:none'>C.HHHE</td>
+  <td colspan=2 class=xl758 style='border-left:none'>FEED/ BIRD</td>
+  <td colspan=3 class=xl758 style='border-right:.5pt solid black'>BODY WEIGHT</td>
+  <td colspan=3 class=xl758 style='border-left:none'><span
+  style='mso-spacerun:yes'>&nbsp;</span>EGG<span
+  style='mso-spacerun:yes'>&nbsp; </span>WEIGHT</td>
+  <td colspan=2 class=xl758 style='border-right:.5pt solid black'>M. MORTALITY%</td>
+  <td colspan=2 class=xl760 style='border-right:.5pt solid black;border-left:
+  none'>Feed Male</td>
+  <td colspan=4 class=xl128 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=19 style='mso-height-source:userset;height:14.25pt'>
+  <td height=19 class=xl578 style='height:14.25pt;border-top:none'>&nbsp;</td>
+  <td class=xl626 style='border-top:none;border-left:none'>STD</td>
+  <td class=xl633 style='border-top:none;border-left:none'>ACT</td>
+  <td class=xl578 style='border-top:none;border-left:none'>DIF</td>
+  <td class=xl626 style='border-top:none;border-left:none'>STD</td>
+  <td class=xl633 style='border-top:none;border-left:none'>ACT</td>
+  <td class=xl626 style='border-top:none;border-left:none'>STD</td>
+  <td class=xl633 style='border-top:none;border-left:none'>ACT</td>
+  <td class=xl626 style='border-top:none;border-left:none'>STD</td>
+  <td class=xl633 style='border-top:none;border-left:none'>ACT</td>
+  <td class=xl626 style='border-top:none;border-left:none'>STD</td>
+  <td class=xl633 style='border-top:none;border-left:none'>ACT</td>
+  <td class=xl626 style='border-top:none;border-left:none'>STD</td>
+  <td class=xl633 style='border-top:none;border-left:none'>ACT</td>
+  <td class=xl626 style='border-top:none;border-left:none'>STD</td>
+  <td class=xl633 style='border-top:none;border-left:none'>ACT</td>
+  <td class=xl581 style='border-top:none;border-left:none'>DIF</td>
+  <td class=xl626 style='border-top:none;border-left:none'>STD</td>
+  <td class=xl633 style='border-top:none;border-left:none'>ACT</td>
+  <td class=xl620 style='border-top:none;border-left:none'>DIF</td>
+  <td colspan=2 class=xl695 style='border-top:none'>ACT</td>
+  <td class=xl626 style='border-top:none;border-left:none'>STD</td>
+  <td class=xl695 style='border-top:none;border-left:none'>ACT</td>
+  <td colspan=4 class=xl128 style='mso-ignore:colspan'></td>
+ </tr>
+
+
+<?php
+$startfemale =0;$startmale=0;
+$startdummage = 0;
+$mcummort = 0;
+$mcumcull = 0;
+$fcummort = 0;
+$fcumcull = 0;
+$strtfemale = 0;
+$strtmale = 0;
+$cumeggs = 0;
+$cumheggs = 0;
+$query12 = "SELECT min(age) as minage,female,male from breeder_initial WHERE flock like '%$flockget' and age < '$newage11' and eggs <> '' ";
+$result12 = mysql_query($query12,$conn); 
+while($row12 = mysql_fetch_assoc($result12))
+{ 
+$startdummage = $row12['minage']; 
+ $strtfemale = $row12['female'];
+ $strtmale = $row12['male'];
+}
+ $query12 = "SELECT sum(fmort) as fmort,sum(fcull) as fcull,sum(mmort) as mmort,sum(mcull) as mcull from breeder_initial WHERE flock like '%$flockget' and age < '$startdummage' ";
+$result12 = mysql_query($query12,$conn); 
+while($row12 = mysql_fetch_assoc($result12))
+{ 
+  $fcummort = $row12['fmort'];
+ $fcumcull = $row12['fcull'];
+$mcummort = $row12['mmort'];
+$mcumcull = $row12['mcull'];
+}
+if($strtfemale == 0)
+{
+$query1 = "SELECT * FROM breeder_flock WHERE flockcode like '%$flockget' group by startdate";
+$result1 = mysql_query($query1,$conn); 
+$tcount = mysql_num_rows($result1);
+
+if($tcount > 1)
+{
+  $query1 = "SELECT sum(femaleopening) as femaleopening,sum(maleopening) as maleopening,age,startdate FROM breeder_flock WHERE flockcode like '%$flockget' group by startdate order by startdate asc limit 1";
+  $result1 = mysql_query($query1,$conn); 
+  while($row11 = mysql_fetch_assoc($result1))  
+  {
+      $startdate = $row11['startdate'];
+      $startage = $row11['age'];
+      $startfemale = $row11['femaleopening'];
+      $startmale = $row11['maleopening'];
+  }
+}
+else
+{
+  $query1 = "SELECT * FROM breeder_flock WHERE flockcode like '%$flockget'";
+  $result1 = mysql_query($query1,$conn); 
+  while($row11 = mysql_fetch_assoc($result1))  
+  {
+      $startdate = $row11['startdate'];
+      $startage = $row11['age'];
+      $startfemale = $startfemale + $row11['femaleopening'];
+      $startmale = $startmale + $row11['maleopening'];
+  }
+}
+$strtfemale = $startfemale;
+$strtmale = $startmale;
+}
+
+
+ $query1 = "SELECT * FROM breeder_consumption WHERE flock like '%$flockget' and date2 < '$prodate' group by date2,flock";
+
+$result1 = mysql_query($query1,$conn); 
+while($row11 = mysql_fetch_assoc($result1))
+{
+
+   $strtfemale = $strtfemale - ($row11['fmort'] + $row11['fcull']);
+   $strtmale = $strtmale - ($row11['mmort'] + $row11['mcull']);
+ 
+}
+
+  //echo $startfemale ."&&&&&".$startmale;
+  $query1t = "SELECT sum(quantity) as quantity  FROM `ims_stocktransfer` WHERE cat ='Female Birds' AND  towarehouse like '%$flockget' and fromwarehouse not like '%$flockget' AND date < '$prodate' ";
+    $result1t = mysql_query($query1t,$conn); 
+  	while($row11t = mysql_fetch_assoc($result1t))  
+  	{
+	// echo "female tr in    ";echo 
+	$strtfemale = $strtfemale + $row11t['quantity'];
+	}
+	 $query1t = "SELECT sum(quantity) as quantity  FROM `ims_stocktransfer` WHERE cat= 'Male Birds' AND  towarehouse like '%$flockget' and fromwarehouse not like '%$flockget' AND date < '$prodate'  ";
+    $result1t = mysql_query($query1t,$conn); 
+  	while($row11t = mysql_fetch_assoc($result1t))  
+  	{
+      
+	  //echo "male tr in    ";echo 
+	  $strtmale = $strtmale + $row11t['quantity'];
+	  }
+	  $query1t2 = "SELECT cat,sum(quantity) as quantity FROM `ims_stocktransfer` WHERE cat ='Female Birds' AND client = '$client' AND towarehouse not like '%$flockget' and fromwarehouse like '%$flockget' AND date < '$prodate'";
+  	$result1t2 = mysql_query($query1t2,$conn); 
+  	while($row11t2= mysql_fetch_assoc($result1t2))  
+  	{
+     
+	 //echo "female tr out    ";echo  
+	 $strtfemale = $strtfemale - $row11t2['quantity'];
+	 
+  }
+ $query1t2 = "SELECT cat,sum(quantity) as quantity FROM `ims_stocktransfer` WHERE cat = 'Male Birds' AND client = '$client' AND towarehouse not like '%$flockget' and fromwarehouse like '%$flockget' AND date < '$prodate'";
+  	$result1t2 = mysql_query($query1t2,$conn); 
+  	while($row11t2= mysql_fetch_assoc($result1t2))  
+  	{
+     
+	  //echo "male tr out    ";echo 
+	   $strtmale = $strtmale - $row11t2['quantity'];
+	  }
+
+
+ $query1tpur = "SELECT * FROM `pp_sobi` WHERE code in (select distinct(code) from ims_itemcodes where cat ='Female Birds') AND client = '$client' AND flock like '%$flockget' AND date < '$prodate'";
+  $result1tpur = mysql_query($query1tpur,$conn); 
+  while($row11tpur = mysql_fetch_assoc($result1tpur))  
+  {
+	  //echo "female pr     ";echo 
+	  $strtfemale = $strtfemale + $row11tpur['receivedquantity'];
+  }
+  
+   $query1tpur = "SELECT * FROM `pp_sobi` WHERE code in (select distinct(code) from ims_itemcodes where cat ='Male Birds') AND client = '$client' AND flock like '%$flockget' AND date < '$prodate'";
+  $result1tpur = mysql_query($query1tpur,$conn); 
+  while($row11tpur = mysql_fetch_assoc($result1tpur))  
+  {
+	  //echo "female pur    ";echo 
+	   $strtmale = $strtmale + $row11tpur['receivedquantity'];
+  }
+  
+ $femalesale = 0;$malesale=0;
+ $query1t = "SELECT * FROM `oc_cobi` WHERE code in (select distinct(code) from ims_itemcodes where cat ='Male Birds') AND client = '$client' AND flock like '%$flockget' AND date<'$prodate'";
+  $result1t = mysql_query($query1t,$conn); 
+  while($row11t = mysql_fetch_assoc($result1t))  
+  {
+   
+    	  $malesale = $malesale + $row11t['quantity'];
+	  
+  }
+  $query1t = "SELECT * FROM `oc_cobi` WHERE code in (select distinct(code) from ims_itemcodes where cat ='Female Birds') AND client = '$client' AND flock like '%$flockget' AND date<'$prodate'";
+  $result1t = mysql_query($query1t,$conn); 
+  while($row11t = mysql_fetch_assoc($result1t))  
+  {  
+     	  $femalesale = $femalesale + $row11t['quantity'];	  
+  }
+   /*if($femalesale > 0)
+  {
+  $strtfemale = $strtfemale - $femalesale;
+  }
+   if($malet > 0)
+  {
+  $strtmale = $strtmale - $malesale;
+  }*/
+
+$query12 = "SELECT * from breeder_initial WHERE flock like '%$flockget' and age < '$newage11' and eggs <> '' ";
+$result12 = mysql_query($query12,$conn); 
+while($row12 = mysql_fetch_assoc($result12))
+{
+
+$totprod = 0;
+$tothe = 0;
+  $prod = $row12['eggs'];
+  $cat = explode(",",$prod);
+  $eggcnt = count($cat) - 1;
+  for($d = 0;$d < $eggcnt;$d++)
+  {
+    $eggs = explode(":",$cat[$d]);
+	if($eggs[1] > 0)
+	{
+	$totprod = $totprod + $eggs[1];
+	}
+	if($eggs[0] == "HE100")
+	{
+	$tothe = $eggs[1];
+	}
+  }
+ /*$fcummort = $fcummort + $row12['fmort'];
+  $mcummort = $mcummort + $row12['mmort'];
+  $fprodop = $strtfemale - $fcummort - $fcumcull;
+$mprodop = $strtmale - $mcummort - $mcumcull;*/
+$fcummort = $fcummort + $row12['fmort'] + $fcumcull;
+  $mcummort = $mcummort + $row12['mmort'] + $mcumcull;
+  $fprodop = $strtfemale - $fcummort;
+$mprodop = $strtmale - $mcummort;
+ 
+$cumeggs = $cumeggs + $totprod;
+$cumheggs = $cumheggs + $tothe;
+?>
+<tr height=17 style='mso-height-source:userset;height:12.75pt'>
+  <td height=17 class=xl586 style='height:12.75pt;border-top:none'><?php echo $row12['age']; ?></td>
+  <td class=xl627 style='border-top:none;border-left:none'><?php echo   $stdmort[$row12['age']]; ?></td>
+  <td class=xl634 style='border-top:none;border-left:none'><?php echo round((($fcummort/$startfemale) * 100),2); ?></td>
+  <td class=xl693 style='border-top:none;border-left:none'><?php echo round((($fcummort/$startfemale) * 100) - $stdmort[$row12['age']],2); ?></td>
+   <td class=xl635 style='border-top:none;border-left:none'><?php echo $stdhdper[$row12['age']]; ?></td>
+   <td class=xl634 align=right style='border-top:none;border-left:none'><?php echo round((($totprod/7)/$fprodop)*100,1); ?></td>
+   <td class=xl635 style='border-top:none;border-left:none'><?php echo $stdheggper[$row12['age']]; ?></td>
+   <td class=xl634 align=right style='border-top:none;border-left:none'><?php echo round(($tothe/$totprod)*100,1); ?></td>
+   <td class=xl629 style='border-top:none;border-left:none'><?php echo $stdcumhhp[$row12['age']]; ?></td>
+    <td class=xl634 style='border-top:none;border-left:none'><?php echo round(($cumeggs/$strtfemale),2); ?></td>
+	<td class=xl629 style='border-top:none;border-left:none'><?php echo $stdcumhhe[$row12['age']]; ?></td>
+	<td class=xl634 style='border-top:none;border-left:none'><?php echo round(($cumheggs/$strtfemale),2); ?></td>
+	<td class=xl635 style='border-top:none;border-left:none'><?php echo $stdffeed[$row12['age']]; ?></td>
+	<td class=xl634 style='border-top:none;border-left:none'><?php echo round((($row12['ffeedqty'] * 1000)/($fprodop * 7)),2); ?></td>
+	<td class=xl638 align=right style='border-top:none;border-left:none'><?php echo $stdfweight[$row12['age']]; ?></td>
+	<td class=xl642 style='border-top:none;border-left:none'><?php if($row12['fweight']) { echo $row12['fweight']; } else { echo 0; } ?></td>
+	 <td class=xl587 align=right style='border-top:none;border-left:none'><?php echo $row12['fweight'] - $stdfweight[$row12['age']]; ?></td>
+	 <td class=xl645 align=right style='border-top:none'><?php echo $stdeggwt[$row12['age']]; ?></td>
+  <td class=xl642 style='border-top:none;border-left:none'><?php echo $row12['eggwt']; ?></td>
+  <td class=xl588 align=right style='border-top:none;border-left:none'><?php echo round(( $row12['eggwt'] - $stdeggwt[$row12['age']]),2); ?></td>
+   <td colspan=2 class=xl634 style='border-top:none'><?php echo round((($mcummort/$startmale) * 100),2); ?></td>
+    <td class=xl558 align=right style='border-top:none;border-left:none'><?php echo $stdmfeed[$row12['age']]; ?></td>
+  <td class=xl634 style='border-top:none;border-left:none'><?php echo round((($row12['mfeedqty'] * 1000)/($mprodop * 7)),2);; ?></td>
+  <td colspan=4 class=xl128 style='mso-ignore:colspan'></td>
+  </tr>
+<?php
+$fprodop = $fprodop - $row12['fmort'] - $row12['fcull'];
+$mprodop = $mprodop - $row12['mmort'] - $row12['mcull'];
+}
+
+for($bage = $newage11;$bage < $nrWeeksPassed + 1;$bage++) {
+$fcummort = $fcummort + $_SESSION['ifmort'][$bage] + $_SESSION['ifcull'][$bage];
+$cumeggs = $cumeggs + $_SESSION['ieggs'][$bage];
+$cumheggs = $cumheggs + $_SESSION['iheggs'][$bage];
+$mcummort = $mcummort + $_SESSION['immort'][$bage] + $_SESSION['imcull'][$bage];
+?>
+ <tr height=17 style='mso-height-source:userset;height:12.75pt'>
+  <td height=17 class=xl586 style='height:12.75pt;border-top:none'><?php echo $bage; ?></td>
+  <td class=xl627 style='border-top:none;border-left:none'><?php echo  $_SESSION['cfmortstd'][$bage]; ?></td>
+  <td class=xl634 style='border-top:none;border-left:none'><?php echo round(((($fcummort)/$startfemale)* 100),2); ?></td>
+  <td class=xl693 style='border-top:none;border-left:none'><?php echo round(((($fcummort)/$startfemale)* 100) - $_SESSION['cfmortstd'][$bage],2); ?></td>
+  <td class=xl635 style='border-top:none;border-left:none'><?php echo $_SESSION['hdstd'][$bage]; ?></td>
+  <td class=xl634 style='border-top:none;border-left:none'><?php echo $_SESSION['hd'][$bage]; ?></td>
+  <td class=xl635 style='border-top:none;border-left:none'><?php echo $_SESSION['heperstd'][$bage]; ?></td>
+  <td class=xl634 style='border-top:none;border-left:none'><?php echo $_SESSION['heper'][$bage]; ?></td>
+  <td class=xl629 style='border-top:none;border-left:none'><?php echo $_SESSION['eggbirdstd'][$bage]; ?></td>
+  <td class=xl634 style='border-top:none;border-left:none'><?php echo round(($cumeggs/$strtfemale),2); ?></td>  
+ <!-- <td class=xl634 style='border-top:none;border-left:none'><?php echo $strtfemale; ?></td>--> 
+     <td class=xl629 style='border-top:none;border-left:none'><?php echo $_SESSION['hebirdstd'][$bage]; ?></td>
+  <td class=xl634 style='border-top:none;border-left:none'><?php echo round(($cumheggs/$strtfemale),2); ?></td>
+  <td class=xl635 style='border-top:none;border-left:none'><?php echo $stdffeed[$bage]; ?></td>
+  <td class=xl634 style='border-top:none;border-left:none'><?php echo $_SESSION['iffeedpb'][$bage]; ?></td>
+  <td class=xl638 align=right style='border-top:none;border-left:none'><?php echo $_SESSION['fbweightstd'][$bage]; ?></td>
+  <td class=xl642 style='border-top:none;border-left:none'><?php if($_SESSION['fbweight'][$bage]) { echo $_SESSION['fbweight'][$bage]; } else { echo 0; } ?></td>
+  <td class=xl587 align=right style='border-top:none;border-left:none'><?php echo $_SESSION['fbweight'][$bage] - $_SESSION['fbweightstd'][$bage]; ?></td>
+  <td class=xl645 align=right style='border-top:none'><?php echo $_SESSION['ieggwtstd'][$bage]; ?></td>
+  <td class=xl642 style='border-top:none;border-left:none'><?php echo $_SESSION['ieggwt'][$bage]; ?></td>
+  <td class=xl588 align=right style='border-top:none;border-left:none'><?php echo round(( $_SESSION['ieggwt'][$bage] - $_SESSION['ieggwtstd'][$bage]),2); ?></td>
+  <td colspan=2 class=xl634 style='border-top:none'><?php echo round(((($mcummort)/$startmale)* 100),2); ?></td>
+  <td class=xl558 align=right style='border-top:none;border-left:none'><?php echo $stdmfeed[$bage]; ?></td>
+  <td class=xl634 style='border-top:none;border-left:none'><?php echo $_SESSION['imfeedpb'][$bage]; ?></td>
+  <td colspan=4 class=xl128 style='mso-ignore:colspan'></td>
+ </tr>
+<?php } ?>
+</table>
+
+<?php  $end_process = (float) array_sum(explode(' ',microtime())); 
+	$exetime = $end_process-$start_process;
+?>
+<input id="exetime1" value="<?php echo $exetime; ?>" type="hidden"/>
+<center>
+<br/><br/>
+<p ><div id="loadgingpage" style="font-size:10px; font-family:Verdana, Arial, Helvetica, sans-serif"></div></p>
+</center>
+
+
+</body>
+<script type="text/javascript">
+document.getElementById("loadingimg").style.visibility = "hidden";
+</script>
+</html>

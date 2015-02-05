@@ -1,0 +1,835 @@
+<?php
+session_start();
+ob_start();
+include "config.php";
+include "reportheader.php";
+
+
+if($_GET['fromdate']!="")
+{
+$fromdate = date("Y-m-d",strtotime($_GET['fromdate']));
+$todate = date("Y-m-d",strtotime($_GET['todate']));
+}
+else
+{
+$query = "SELECT max( date ) AS maxdate, min( date ) AS mindate FROM feed_itemwise";
+$result = mysql_query($query,$conn1) or die(mysql_error());
+$dateres = mysql_fetch_assoc($result);
+$fromdate = $dateres['maxdate'];
+$todate = $dateres['maxdate'];
+}
+/*if($_GET['todate']!="")
+$todate = date("Y-m-d",strtotime($_GET['todate']));
+else*/
+
+$cond="";
+/*if($_GET['feedtype']!='all'&&$_GET['feedtype']!="")
+  $cond.="and feedtype='$_GET[feedtype]'";
+if($_GET['formulae']!='all'&&$_GET['formulae']!="")
+   $cond.="and formulae='$_GET[formulae]'";
+if($_GET['ingredient']!='all'&&$_GET['ingredient']!="")
+  $cond.="and ingredient='$_GET[ingredient]'";*/
+if($_GET['feedmill']!='All'&&$_GET['feedmill']!="")
+{
+  $cond.="and feedmill='$_GET[feedmill]'";
+  $condb = "and feedmill='$_GET[feedmill]'";
+  }
+?>
+<?php
+header("Expires: Mon, 26 Jul 1997 05:00:00 GMT"); // Date in the past
+header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // Always modified
+header("Cache-Control: private, no-store, no-cache, must-revalidate"); // HTTP/1.1 
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache"); // HTTP/1.0
+?>
+<?php include "phprptinc/ewrcfg3.php"; ?>
+<?php include "phprptinc/ewmysql.php"; ?>
+<?php include "phprptinc/ewrfn3.php"; ?>
+<?php
+
+// Get page start time
+$starttime = ewrpt_microtime();
+
+// Open connection to the database
+$conn = ewrpt_Connect();
+
+// Table level constants
+define("EW_REPORT_TABLE_VAR", "feed_wise_cunsumption", TRUE);
+define("EW_REPORT_TABLE_SESSION_GROUP_PER_PAGE", "feed_wise_cunsumption_grpperpage", TRUE);
+define("EW_REPORT_TABLE_SESSION_START_GROUP", "feed_wise_cunsumption_start", TRUE);
+define("EW_REPORT_TABLE_SESSION_SEARCH", "feed_wise_cunsumption_search", TRUE);
+define("EW_REPORT_TABLE_SESSION_CHILD_USER_ID", "feed_wise_cunsumption_childuserid", TRUE);
+define("EW_REPORT_TABLE_SESSION_ORDER_BY", "feed_wise_cunsumption_orderby", TRUE);
+
+// Table level SQL
+$EW_REPORT_TABLE_SQL_FROM = "feed_itemwise f ,ims_itemcodes i";
+$EW_REPORT_TABLE_SQL_SELECT = "SELECT f.date,f.feedtype,f.formulae,f.ingredient,f.feedmill,i.description,f.quantity FROM " . $EW_REPORT_TABLE_SQL_FROM;
+$EW_REPORT_TABLE_SQL_WHERE = "f.flag=0 and i.code=f.ingredient and f.date >= '$fromdate' and f.date <= '$todate' and f.client='$client' $cond";
+$EW_REPORT_TABLE_SQL_GROUPBY = "f.ingredient";
+$EW_REPORT_TABLE_SQL_HAVING = "";
+$EW_REPORT_TABLE_SQL_ORDERBY = "f.formulae,f.ingredient limit 0,1 ";
+$EW_REPORT_TABLE_SQL_USERID_FILTER = "";
+$EW_REPORT_TABLE_SQL_CHART_BASE = "";
+$af_date = NULL; // Popup filter for date
+$af_feedtype = NULL; // Popup filter for feedtype
+$af_formulae = NULL; // Popup filter for formulae
+$af_feedmill=NULL;
+$af_ingredient = NULL; // Popup filter for ingredient
+$af_description = NULL; // Popup filter for description
+$af_quantity = NULL; // Popup filter for quantity
+?>
+<?php
+$sExport = @$_GET["export"]; // Load export request
+if ($sExport == "html") {
+
+	// Printer friendly
+}
+if ($sExport == "excel") {
+	header('Content-Type: application/vnd.ms-excel');
+	header('Content-Disposition: attachment; filename=' . EW_REPORT_TABLE_VAR .'.xls');
+}
+if ($sExport == "word") {
+	header('Content-Type: application/vnd.ms-word');
+	header('Content-Disposition: attachment; filename=' . EW_REPORT_TABLE_VAR .'.doc');
+}
+?>
+<?php
+
+// Initialize common variables
+// Paging variables
+
+$nRecCount = 0; // Record count
+$nStartGrp = 0; // Start group
+$nStopGrp = 0; // Stop group
+$nTotalGrps = 0; // Total groups
+$nGrpCount = 0; // Group count
+$nDisplayGrps = "ALL"; // Groups per page
+$nGrpRange = 10;
+
+// Clear field for ext filter
+$sClearExtFilter = "";
+
+// Non-Text Extended Filters
+// Text Extended Filters
+// Custom filters
+
+$ewrpt_CustomFilters = array();
+?>
+<?php
+?>
+<?php
+
+// Field variables
+$x_date = NULL;
+$x_feedtype = NULL;
+$x_feedmill=NULL;
+$x_formulae = NULL;
+$x_ingredient = NULL;
+$x_description = NULL;
+$x_quantity = NULL;
+
+// Detail variables
+$o_date = NULL; $t_date = NULL; $ft_date = 133; $rf_date = NULL; $rt_date = NULL;
+$o_feedmill = NULL; $t_feedmill = NULL; $ft_feedmill = 201; $rf_feedmill = NULL; $rt_feedmill = NULL;
+$o_feedtype = NULL; $t_feedtype = NULL; $ft_feedtype = 201; $rf_feedtype = NULL; $rt_feedtype = NULL;
+$o_formulae = NULL; $t_formulae = NULL; $ft_formulae = 200; $rf_formulae = NULL; $rt_formulae = NULL;
+$o_ingredient = NULL; $t_ingredient = NULL; $ft_ingredient = 201; $rf_ingredient = NULL; $rt_ingredient = NULL;
+$o_description = NULL; $t_description = NULL; $ft_description = 200; $rf_description = NULL; $rt_description = NULL;
+$o_quantity = NULL; $t_quantity = NULL; $ft_quantity = 5; $rf_quantity = NULL; $rt_quantity = NULL;
+?>
+<?php
+
+// Filter
+$sFilter = "";
+
+// Aggregate variables
+// 1st dimension = no of groups (level 0 used for grand total)
+// 2nd dimension = no of fields
+
+$nDtls = 7;
+$nGrps = 1;
+$val = ewrpt_InitArray($nDtls, 0);
+$cnt = ewrpt_Init2DArray($nGrps, $nDtls, 0);
+$smry = ewrpt_Init2DArray($nGrps, $nDtls, 0);
+$mn = ewrpt_Init2DArray($nGrps, $nDtls, NULL);
+$mx = ewrpt_Init2DArray($nGrps, $nDtls, NULL);
+$grandsmry = ewrpt_InitArray($nDtls, 0);
+$grandmn = ewrpt_InitArray($nDtls, NULL);
+$grandmx = ewrpt_InitArray($nDtls, NULL);
+
+// Set up if accumulation required
+$col = array(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE);
+
+// Set up groups per page dynamically
+SetUpDisplayGrps();
+
+// Set up popup filter
+SetupPopup();
+
+// Extended filter
+$sExtendedFilter = "";
+
+// Build popup filter
+$sPopupFilter = GetPopupFilter();
+
+//echo "popup filter: " . $sPopupFilter . "<br>";
+if ($sPopupFilter <> "") {
+	if ($sFilter <> "")
+		$sFilter = "($sFilter) AND ($sPopupFilter)";
+	else
+		$sFilter = $sPopupFilter;
+}
+
+// No filter
+$bFilterApplied = FALSE;
+
+// Get sort
+$sSort = getSort();
+
+// Get total count
+ $sSql = ewrpt_BuildReportSql($EW_REPORT_TABLE_SQL_SELECT, $EW_REPORT_TABLE_SQL_WHERE, $EW_REPORT_TABLE_SQL_GROUPBY, $EW_REPORT_TABLE_SQL_HAVING, $EW_REPORT_TABLE_SQL_ORDERBY, $sFilter, @$sSort);
+$nTotalGrps = GetCnt($sSql);
+if ($nDisplayGrps <= 0) // Display all groups
+	$nDisplayGrps = $nTotalGrps;
+$nStartGrp = 1;
+
+// Show header
+$bShowFirstHeader = ($nTotalGrps > 0);
+
+//$bShowFirstHeader = TRUE; // Uncomment to always show header
+// Set up start position if not export all
+
+if (EW_REPORT_EXPORT_ALL && @$sExport <> "")
+    $nDisplayGrps = $nTotalGrps;
+else
+    SetUpStartGroup(); 
+
+// Get current page records
+$rs = GetRs($sSql, $nStartGrp, $nDisplayGrps);
+?>
+<?php include "phprptinc/header.php"; ?>
+<?php if (@$sExport == "") { ?>
+<script type="text/javascript">
+var EW_REPORT_DATE_SEPARATOR = "/";
+if (EW_REPORT_DATE_SEPARATOR == "") EW_REPORT_DATE_SEPARATOR = "/"; // Default date separator
+</script>
+<script type="text/javascript" src="phprptjs/ewrpt.js"></script>
+<?php } ?>
+<?php if (@$sExport == "") { ?>
+<script src="phprptjs/popup.js" type="text/javascript"></script>
+<script src="phprptjs/ewrptpop.js" type="text/javascript"></script>
+<script src="FusionChartsFree/JSClass/FusionCharts.js" type="text/javascript"></script>
+<script type="text/javascript">
+var EW_REPORT_POPUP_ALL = "(All)";
+var EW_REPORT_POPUP_OK = "  OK  ";
+var EW_REPORT_POPUP_CANCEL = "Cancel";
+var EW_REPORT_POPUP_FROM = "From";
+var EW_REPORT_POPUP_TO = "To";
+var EW_REPORT_POPUP_PLEASE_SELECT = "Please Select";
+var EW_REPORT_POPUP_NO_VALUE = "No value selected!";
+
+// popup fields
+</script>
+<?php } ?>
+<?php if (@$sExport == "") { ?>
+<!-- Table Container (Begin) -->
+<table align="center" id="ewContainer" cellspacing="0" cellpadding="0" border="0">
+<!-- Top Container (Begin) -->
+<tr><td colspan="3"><div id="ewTop" class="phpreportmaker">
+<!-- top slot -->
+<a name="top"></a>
+<?php } ?>
+<table align="center" border="0">
+<tr>
+
+<td style="text-align:center" colspan="2"><strong><font color="#3e3276">Feed Wise Raw Material Consumed</font></strong></td>
+</tr>
+
+</table>
+<?php if (@$sExport == "") { ?>
+&nbsp;&nbsp;<a onclick="reload1('export','html')"><font style="color:#0000CC; cursor:pointer"><u>Printer Friendly</u></font></a>
+&nbsp;&nbsp;<a onclick="reload1('export','excel')"><font style="color:#0000CC; cursor:pointer"><u>Export to Excel</u></font></a>
+&nbsp;&nbsp;<a onclick="reload1('export','word')"><font style="color:#0000CC; cursor:pointer"><u>Export to Word</u></font></a> <br /><br />
+<?php  } 
+else {  ?><center> <br />
+<?php if($_GET['feedmill']!='All' && $_GET['feedmill']!="")?><font color="#3e3276"><b>Feedmill :</b></font><?php echo $_GET['feedmill'].'&nbsp;';    ?>
+<font color="#3e3276"><b>From Date : </b></font><?php echo $_GET['fromdate'].'&nbsp;' ?>
+<font color="#3e3276"><b>To Date : </b></font><?php echo $_GET['todate'].'&nbsp;' ?> <br />
+<?php if($_GET['formulae']!='all' && $_GET['formulae']!="") {?> <font color="#3e3276"><b>Formula :</b></font><?php  echo $_GET['formulae'].'&nbsp;';} ?>
+<?php if($_GET['feedtype']!='all' && $_GET['feedtype']!=""){?> <font color="#3e3276"><b>Feedtype :</b></font><?php  echo $_GET[feedtype].'&nbsp;'; }?>
+<?php if($_GET['ingredient']!='all' && $_GET['ingredient']!=""){?> <font color="#3e3276"><b>Item Code :</b></font><?php  echo $_GET['ingredient'].'&nbsp;'?> <font color="#3e3276"><b>Description :</b></font><?php echo $_GET[desc]; }?>
+</center> <br />
+<?php }?>
+
+
+
+
+
+
+<?php if (@$sExport == "") { ?>
+</div></td></tr>
+<!-- Top Container (End) -->
+
+
+
+<tr>
+	<!-- Left Container (Begin) -->
+	<td valign="top"><div id="ewLeft" class="phpreportmaker">
+	<!-- Left slot -->
+	</div></td>
+	<!-- Left Container (End) -->
+	<!-- Center Container - Report (Begin) -->
+	<td valign="top" class="ewPadding"><div id="ewCenter" class="phpreportmaker">
+	<!-- center slot -->
+<?php } ?>
+<!-- summary report starts -->
+<div id="report_summary">
+<table align="center" class="ewGrid" cellspacing="0">
+<tr>
+	<td class="ewGridContent"><?php if (@$sExport == "") { ?>
+<!-- Report Grid (Begin) -->
+<div class="ewGridUpperPanel">
+
+Feedmill 
+  <select name="select" id="feedmill" onchange="reload1('','')">
+    <option <?php if($_GET[feedmill]=='All') echo 'selected="selected"'; ?> value="All">All</option>
+    <?php 
+$q="select distinct(feedmill) from feed_itemwise where flag=0 and date >= '$fromdate' and date <= '$todate' and client='$client' order by feedmill";
+$r=mysql_query($q,$conn1);
+while($a=mysql_fetch_assoc($r))
+{ ?>
+    <option <?php if($_GET[feedmill]==$a['feedmill']) echo 'selected="selected"'; ?>  value="<?php echo $a['feedmill'] ?>"><?php echo $a['feedmill'] ?></option>
+    <?php
+}
+?>
+  </select>
+ From Date&nbsp;
+<input type="text" class="datepicker" id="fromdate" name="fromdate" value="<?php   echo date($datephp,strtotime($fromdate));  ?>" onchange="reload1('','')" />
+&nbsp;&nbsp;&nbsp;
+
+To Date&nbsp;
+<input type="text" class="datepicker" id="todate" name="todate" value="<?php   echo date($datephp,strtotime($todate));  ?>" onchange="reload1('','')" />
+&nbsp;&nbsp;&nbsp;
+
+
+
+</div>
+
+<?php } ?>
+<div class="ewGridMiddlePanel">
+<table class="ewTable ewTableSeparate" cellspacing="0">
+<?php
+
+// Set the last group to display if not export all
+if (EW_REPORT_EXPORT_ALL && @$sExport <> "") {
+	$nStopGrp = $nTotalGrps;
+} else {
+	$nStopGrp = $nStartGrp + $nDisplayGrps - 1;
+}
+
+// Stop group <= total number of groups
+if (intval($nStopGrp) > intval($nTotalGrps))
+	$nStopGrp = $nTotalGrps;
+$nRecCount = 0;
+
+// Get first row
+if ($nTotalGrps > 0) {
+	GetRow(1);
+	$nGrpCount = 1;
+}
+//while (($rs && !$rs->EOF) || $bShowFirstHeader) {
+if(1){
+	// Show header
+	if ($bShowFirstHeader) {
+	
+	
+	$fi = 0;
+	$feedquery = "select distinct(feedtype),description  from feed_itemwise f,ims_itemcodes i where f.feedtype = i.code $cond order by feedtype";
+	   $feedresult = mysql_query($feedquery,$conn1) or die(mysql_error());
+	   while($fres = mysql_fetch_assoc($feedresult))
+	   {
+	      $feedcode[$fi] = $fres['feedtype'];
+		  $feeddesc[$fi] = $fres['description'];
+		  $fi++;
+	   } 
+	   
+$queryvalues = "select sum(quantity) as quantity,feedtype,ingredient from feed_itemwise where date >= '$fromdate' and date <= '$todate' and flag = 0 $cond group by ingredient,feedtype";
+$resultvalues = mysql_query($queryvalues,$conn1);
+while($resv = mysql_fetch_assoc($resultvalues))
+{
+$values[$resv['ingredient']][$resv['feedtype']] = $resv['quantity'];
+if($resv['quantity'])
+$feedflag[$resv['feedtype']] = 1;
+}	
+	
+?>
+	<thead>
+	<tr>
+	<td valign="bottom" class="ewTableHeader">Item Code</td><td valign="bottom" class="ewTableHeader">Item Description</td>
+	<?php 
+	for($i = 0; $i< sizeof($feedcode); $i++)
+	 if($feedflag[$feedcode[$i]] == 1)
+	 {
+	 ?>
+	  <td valign="bottom" class="ewTableHeader"><?php echo $feedcode[$i]; echo "&nbsp;(".$feeddesc[$i].")"; ?></td>
+	   <?php
+	 }   
+?>
+<td valign="bottom" class="ewTableHeader">Total</td>
+</tr>
+<?php
+
+ $query1 = "select distinct(ingredient),description from feed_itemwise f,ims_itemcodes i where f.ingredient = i.code and date >= '$fromdate' and date <= '$todate'  and flag = 0 $cond order by ingredient";
+		
+ $size = sizeof($feedcode);  
+$result1 = mysql_query($query1,$conn1) or die(mysql_error());
+while($res1 = mysql_fetch_assoc($result1))
+{
+$total =0;
+$sItemRowClass = " class=\"ewTableRow\"";
+
+		// Display alternate color for rows
+		if ($nRecCount % 2 <> 1)
+			$sItemRowClass = " class=\"ewTableAltRow\"";
+?>
+<tr <?php echo $sItemRowClass;?>>
+<td><?php echo $res1['ingredient']; ?></td><td><?php echo $res1['description']; ?></td>
+<?php 
+
+  for($k=0; $k < $size; $k++)
+  if($feedflag[$feedcode[$k]] == 1)
+  {
+  ?>
+  <td align="right"><?php if($values[$res1['ingredient']][$feedcode[$k]]){ echo $tot=round($values[$res1['ingredient']][$feedcode[$k]],2); $total+=$tot; }else echo "0"; ?> </td>
+  <?php
+  
+   }
+   
+   $nRecCount++; ?>
+   <td align="right"><?php echo $total; ?></td>
+   </tr>
+   <?php } ?>
+   
+   <tr <?php echo $sItemRowClass;?>><td colspan="2">Quantity Produced</td>
+   <?php 
+  $query = "SELECT sum( production ) AS production, mash FROM feed_productionunit where date >= '$fromdate' and date <= '$todate'  GROUP BY mash ORDER BY mash";  
+  $result = mysql_query($query,$conn1) or die(mysql_error());
+  while($res  = mysql_fetch_assoc($result))
+  {
+  $feedproduction[$res['mash']] = $res['production'];
+   }   
+   
+   for($k = 0; $k < $size; $k++)
+   if($feedflag[$feedcode[$k]] == 1)
+   {?>
+   <td align="right"><?php if($feedproduction[$feedcode[$k]]) echo round($feedproduction[$feedcode[$k]],2); else echo "0"; ?> </td>
+   <?php 
+   }
+   ?>
+    
+
+	  
+<td>&nbsp;</td>
+	</tr>
+	</thead>
+	<tbody>
+<?php
+		$bShowFirstHeader = FALSE;
+	}
+	$nRecCount++;
+
+		// Set row color
+		$sItemRowClass = " class=\"ewTableRow\"";
+
+		// Display alternate color for rows
+		if ($nRecCount % 2 <> 1)
+			$sItemRowClass = " class=\"ewTableAltRow\"";
+			
+				
+			
+?>
+
+<?php
+     //$dup_date=$x; $dup_feed=$x2 ; $dup_feedmill=$x4 ; $dup_formulae=$x3;
+		// Accumulate page summary
+		AccumulateSummary();
+
+		// Get next record
+		GetRow(2);
+	$nGrpCount++;
+} // End while
+?>
+	</tbody>
+	<tfoot>
+	</tfoot>
+</table>
+</div>
+</td></tr></table>
+</div>
+<!-- Summary Report Ends -->
+<?php if (@$sExport == "") { ?>
+	</div><br /></td>
+	<!-- Center Container - Report (End) -->
+	<!-- Right Container (Begin) -->
+	<td valign="top"><div id="ewRight" class="phpreportmaker">
+	<!-- Right slot -->
+	</div></td>
+	<!-- Right Container (End) -->
+</tr>
+<!-- Bottom Container (Begin) -->
+<tr><td colspan="3"><div id="ewBottom" class="phpreportmaker">
+	<!-- Bottom slot -->
+	</div><br /></td></tr>
+<!-- Bottom Container (End) -->
+</table>
+<!-- Table Container (End) -->
+<?php } ?>
+<?php
+$conn->Close();
+
+// display elapsed time
+if (defined("EW_REPORT_DEBUG_ENABLED"))
+	echo ewrpt_calcElapsedTime($starttime);
+?>
+<?php include "phprptinc/footer.php"; ?>
+<?php
+
+// Accummulate summary
+function AccumulateSummary() {
+	global $smry, $cnt, $col, $val, $mn, $mx;
+	$cntx = count($smry);
+	for ($ix = 0; $ix < $cntx; $ix++) {
+		$cnty = count($smry[$ix]);
+		for ($iy = 1; $iy < $cnty; $iy++) {
+			$cnt[$ix][$iy]++;
+			if ($col[$iy]) {
+				$valwrk = $val[$iy];
+				if (is_null($valwrk) || !is_numeric($valwrk)) {
+
+					// skip
+				} else {
+					$smry[$ix][$iy] += $valwrk;
+					if (is_null($mn[$ix][$iy])) {
+						$mn[$ix][$iy] = $valwrk;
+						$mx[$ix][$iy] = $valwrk;
+					} else {
+						if ($mn[$ix][$iy] > $valwrk) $mn[$ix][$iy] = $valwrk;
+						if ($mx[$ix][$iy] < $valwrk) $mx[$ix][$iy] = $valwrk;
+					}
+				}
+			}
+		}
+	}
+	$cntx = count($smry);
+	for ($ix = 1; $ix < $cntx; $ix++) {
+		$cnt[$ix][0]++;
+	}
+}
+
+// Reset level summary
+function ResetLevelSummary($lvl) {
+	global $smry, $cnt, $col, $mn, $mx, $nRecCount;
+
+	// Clear summary values
+	$cntx = count($smry);
+	for ($ix = $lvl; $ix < $cntx; $ix++) {
+		$cnty = count($smry[$ix]);
+		for ($iy = 1; $iy < $cnty; $iy++) {
+			$cnt[$ix][$iy] = 0;
+			if ($col[$iy]) {
+				$smry[$ix][$iy] = 0;
+				$mn[$ix][$iy] = NULL;
+				$mx[$ix][$iy] = NULL;
+			}
+		}
+	}
+	$cntx = count($smry);
+	for ($ix = $lvl; $ix < $cntx; $ix++) {
+		$cnt[$ix][0] = 0;
+	}
+
+	// Clear old values
+	// Reset record count
+
+	$nRecCount = 0;
+}
+
+// Accummulate grand summary
+function AccumulateGrandSummary() {
+	global $cnt, $col, $val, $grandsmry, $grandmn, $grandmx;
+	@$cnt[0][0]++;
+	for ($iy = 1; $iy < count($grandsmry); $iy++) {
+		if ($col[$iy]) {
+			$valwrk = $val[$iy];
+			if (is_null($valwrk) || !is_numeric($valwrk)) {
+
+				// skip
+			} else {
+				$grandsmry[$iy] += $valwrk;
+				if (is_null($grandmn[$iy])) {
+					$grandmn[$iy] = $valwrk;
+					$grandmx[$iy] = $valwrk;
+				} else {
+					if ($grandmn[$iy] > $valwrk) $grandmn[$iy] = $valwrk;
+					if ($grandmx[$iy] < $valwrk) $grandmx[$iy] = $valwrk;
+				}
+			}
+		}
+	}
+}
+
+// Get count
+function GetCnt($sql) {
+	global $conn;
+
+	//echo "sql (GetCnt): " . $sql . "<br>";
+	$rscnt = $conn->Execute($sql);
+	$cnt = ($rscnt) ? $rscnt->RecordCount() : 0;
+	return $cnt;
+}
+
+// Get rs
+function GetRs($sql, $start, $grps) {
+	global $conn;
+	$wrksql = $sql . " LIMIT " . ($start-1) . ", " . ($grps);
+
+	//echo "wrksql: (rsgrp)" . $sSql . "<br>";
+	$rswrk = $conn->Execute($wrksql);
+	return $rswrk;
+}
+
+// Get row values
+function GetRow($opt) {
+	global $rs, $val;
+	if (!$rs)
+		return;
+	if ($opt == 1) { // Get first row
+		$rs->MoveFirst();
+	} else { // Get next row
+		$rs->MoveNext();
+	}
+	if (!$rs->EOF) {
+		$GLOBALS['x_date'] = $rs->fields('date');
+		$GLOBALS['x_feedtype'] = $rs->fields('feedtype');
+		$GLOBALS['x_formulae'] = $rs->fields('formulae');
+		$GLOBALS['x_ingredient'] = $rs->fields('ingredient');
+		$GLOBALS['x_description'] = $rs->fields('description');
+		$GLOBALS['x_quantity'] = $rs->fields('quantity');
+		$GLOBALS['x_feedmill'] = $rs->fields('feedmill');
+		$val[1] = $GLOBALS['x_date'];
+		$val[2] = $GLOBALS['x_feedtype'];
+		$val[3] = $GLOBALS['x_formulae'];
+		$val[4] = $GLOBALS['x_ingredient'];
+		$val[5] = $GLOBALS['x_description'];
+		$val[6] = $GLOBALS['x_quantity'];
+		$val[7] = $GLOBALS['x_feedmill'];
+	} else {
+		$GLOBALS['x_date'] = "";
+		$GLOBALS['x_feedtype'] = "";
+		$GLOBALS['x_formulae'] = "";
+		$GLOBALS['x_ingredient'] = "";
+		$GLOBALS['x_description'] = "";
+		$GLOBALS['x_quantity'] = "";
+		$GLOBALS['x_feedmill'] = "";
+	}
+}
+
+//  Set up starting group
+function SetUpStartGroup() {
+	global $nStartGrp, $nTotalGrps, $nDisplayGrps;
+
+	// Exit if no groups
+	if ($nDisplayGrps == 0)
+		return;
+
+	// Check for a 'start' parameter
+	if (@$_GET[EW_REPORT_TABLE_START_GROUP] != "") {
+		$nStartGrp = $_GET[EW_REPORT_TABLE_START_GROUP];
+		$_SESSION[EW_REPORT_TABLE_SESSION_START_GROUP] = $nStartGrp;
+	} elseif (@$_GET["pageno"] != "") {
+		$nPageNo = $_GET["pageno"];
+		if (is_numeric($nPageNo)) {
+			$nStartGrp = ($nPageNo-1)*$nDisplayGrps+1;
+			if ($nStartGrp <= 0) {
+				$nStartGrp = 1;
+			} elseif ($nStartGrp >= intval(($nTotalGrps-1)/$nDisplayGrps)*$nDisplayGrps+1) {
+				$nStartGrp = intval(($nTotalGrps-1)/$nDisplayGrps)*$nDisplayGrps+1;
+			}
+			$_SESSION[EW_REPORT_TABLE_SESSION_START_GROUP] = $nStartGrp;
+		} else {
+			$nStartGrp = @$_SESSION[EW_REPORT_TABLE_SESSION_START_GROUP];
+		}
+	} else {
+		$nStartGrp = @$_SESSION[EW_REPORT_TABLE_SESSION_START_GROUP];	
+	}
+
+	// Check if correct start group counter
+	if (!is_numeric($nStartGrp) || $nStartGrp == "") { // Avoid invalid start group counter
+		$nStartGrp = 1; // Reset start group counter
+		$_SESSION[EW_REPORT_TABLE_SESSION_START_GROUP] = $nStartGrp;
+	} elseif (intval($nStartGrp) > intval($nTotalGrps)) { // Avoid starting group > total groups
+		$nStartGrp = intval(($nTotalGrps-1)/$nDisplayGrps) * $nDisplayGrps + 1; // Point to last page first group
+		$_SESSION[EW_REPORT_TABLE_SESSION_START_GROUP] = $nStartGrp;
+	} elseif (($nStartGrp-1) % $nDisplayGrps <> 0) {
+		$nStartGrp = intval(($nStartGrp-1)/$nDisplayGrps) * $nDisplayGrps + 1; // Point to page boundary
+		$_SESSION[EW_REPORT_TABLE_SESSION_START_GROUP] = $nStartGrp;
+	}
+}
+
+// Set up popup
+function SetupPopup() {
+	global $conn, $sFilter;
+
+	// Initialize popup
+	// Process post back form
+
+	if (count($_POST) > 0) {
+		$sName = @$_POST["popup"]; // Get popup form name
+		if ($sName <> "") {
+		$cntValues = (is_array(@$_POST["sel_$sName"])) ? count($_POST["sel_$sName"]) : 0;
+			if ($cntValues > 0) {
+				$arValues = ewrpt_StripSlashes($_POST["sel_$sName"]);
+				if (trim($arValues[0]) == "") // Select all
+					$arValues = EW_REPORT_INIT_VALUE;
+				$_SESSION["sel_$sName"] = $arValues;
+				$_SESSION["rf_$sName"] = ewrpt_StripSlashes(@$_POST["rf_$sName"]);
+				$_SESSION["rt_$sName"] = ewrpt_StripSlashes(@$_POST["rt_$sName"]);
+				ResetPager();
+			}
+		}
+
+	// Get 'reset' command
+	} elseif (@$_GET["cmd"] <> "") {
+		$sCmd = $_GET["cmd"];
+		if (strtolower($sCmd) == "reset") {
+			ResetPager();
+		}
+	}
+
+	// Load selection criteria to array
+}
+
+// Reset pager
+function ResetPager() {
+
+	// Reset start position (reset command)
+	global $nStartGrp, $nTotalGrps;
+	$nStartGrp = 1;
+	$_SESSION[EW_REPORT_TABLE_SESSION_START_GROUP] = $nStartGrp;
+}
+?>
+<?php
+
+// Set up number of groups displayed per page
+function SetUpDisplayGrps() {
+	global $nDisplayGrps, $nStartGrp;
+	$sWrk = @$_GET[EW_REPORT_TABLE_GROUP_PER_PAGE];
+	if ($sWrk <> "") {
+		if (is_numeric($sWrk)) {
+			$nDisplayGrps = intval($sWrk);
+		} else {
+			if (strtoupper($sWrk) == "ALL") { // display all groups
+				$nDisplayGrps = -1;
+			} else {
+				$nDisplayGrps = "ALL"; // Non-numeric, load default
+			}
+		}
+		$_SESSION[EW_REPORT_TABLE_SESSION_GROUP_PER_PAGE] = $nDisplayGrps; // Save to session
+
+		// Reset start position (reset command)
+		$nStartGrp = 1;
+		$_SESSION[EW_REPORT_TABLE_SESSION_START_GROUP] = $nStartGrp;
+	} else {
+		if (@$_SESSION[EW_REPORT_TABLE_SESSION_GROUP_PER_PAGE] <> "") {
+			$nDisplayGrps = $_SESSION[EW_REPORT_TABLE_SESSION_GROUP_PER_PAGE]; // Restore from session
+		} else {
+			$nDisplayGrps = "ALL"; // Load default
+		}
+	}
+}
+?>
+<?php
+
+// Return poup filter
+function GetPopupFilter() {
+	$sWrk = "";
+	return $sWrk;
+}
+?>
+<?php
+
+//-------------------------------------------------------------------------------
+// Function getSort
+// - Return Sort parameters based on Sort Links clicked
+// - Variables setup: Session[EW_REPORT_TABLE_SESSION_ORDER_BY], Session["sort_Table_Field"]
+function getSort()
+{
+
+	// Check for a resetsort command
+	if (strlen(@$_GET["cmd"]) > 0) {
+		$sCmd = @$_GET["cmd"];
+		if ($sCmd == "resetsort") {
+			$_SESSION[EW_REPORT_TABLE_SESSION_ORDER_BY] = "";
+			$_SESSION[EW_REPORT_TABLE_SESSION_START_GROUP] = 1;
+			$_SESSION["sort_feed_wise_cunsumption_date"] = "";
+			$_SESSION["sort_feed_wise_cunsumption_feedtype"] = "";
+			$_SESSION["sort_feed_wise_cunsumption_feedmill"] = "";
+			$_SESSION["sort_feed_wise_cunsumption_formulae"] = "";
+			$_SESSION["sort_feed_wise_cunsumption_ingredient"] = "";
+			$_SESSION["sort_feed_wise_cunsumption_description"] = "";
+			$_SESSION["sort_feed_wise_cunsumption_quantity"] = "";
+		}
+
+	// Check for an Order parameter
+	} elseif (strlen(@$_GET[EW_REPORT_TABLE_ORDER_BY]) > 0) {
+		$sSortSql = "";
+		$sSortField = "";
+		$sOrder = @$_GET[EW_REPORT_TABLE_ORDER_BY];
+		if (strlen(@$_GET[EW_REPORT_TABLE_ORDER_BY_TYPE]) > 0) {
+			$sOrderType = @$_GET[EW_REPORT_TABLE_ORDER_BY_TYPE];
+		} else {
+			$sOrderType = "";
+		}
+	}
+	return @$_SESSION[EW_REPORT_TABLE_SESSION_ORDER_BY];
+}
+?>
+<script>
+function reload1(value,type)
+{
+
+//var feedtype=document.getElementById('feedtype').value;
+//var formulae=document.getElementById('formulae').value;
+//var ingredient=document.getElementById('ingredient').value;
+
+//var index=document.getElementById('desc').selectedIndex;
+//var desc=document.getElementById('desc').options[index].text;
+var todate=document.getElementById('todate').value;
+var fromdate=document.getElementById('fromdate').value;
+var feedmill=document.getElementById('feedmill').value;
+
+
+var dt1  = parseInt(fromdate.substring(0,2),10); 
+var mon1 = parseInt(fromdate.substring(3,5),10);
+var yr1  = parseInt(fromdate.substring(6,10),10); 
+var dt2  = parseInt(todate.substring(0,2),10); 
+var mon2 = parseInt(todate.substring(3,5),10); 
+var yr2  = parseInt(todate.substring(6,10),10); 
+var date1 = new Date(yr1, mon1, dt1); 
+var date2 = new Date(yr2, mon2, dt2); 
+
+
+if(Date.parse(date1) <= Date.parse(date2))
+{
+path='feedwiserawmaterialconsumed.php?feedmill='+feedmill+'&todate='+todate+'&fromdate='+fromdate;
+if(value='export')
+ path=path+'&export='+type;
+document.location=path;
+}
+else
+{
+alert("From Date should be less than To Date");
+document.getElementById('fromdate').focus();
+}
+}
+</script>

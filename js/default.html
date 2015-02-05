@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title></title>
+	<script type="text/javascript" src="html5.js"></script>
+	<script type="text/javascript" src="jquery-1.4.2.min.js"></script>
+	<script type="text/javascript" src="old-browsers.js"></script>
+	<script type="text/javascript" src="jquery.accessibleList.js"></script>
+	<script type="text/javascript" src="searchField.js"></script>
+	<script type="text/javascript" src="common.js"></script>
+	<script type="text/javascript" src="standard.js"></script>
+	<script type="text/javascript" src="jquery.tip.js"></script>
+	<script type="text/javascript" src="jquery.hashchange.js"></script>
+	<script type="text/javascript" src="jquery.contextMenu.js"></script>
+	<script type="text/javascript" src="jquery.modal.js"></script>
+	<script type="text/javascript" src="list.js"></script>
+
+
+
+
+	<link rel="stylesheet" href="base/jquery.ui.all.css">
+
+	<script src="jquery.ui.core.js"></script>
+	<script src="jquery.ui.datepicker.js"></script>
+	<link rel="stylesheet" href="demos.css">
+
+
+
+
+	<!--[if lte IE 8]><script type="text/javascript" src="js/standard.ie.js"></script><![endif]-->
+	
+	<script  type="text/javascript" src="js/jquery.dataTables.min.js"></script>
+	<script  type="text/javascript" src="js/jquery.datepick/jquery.datepick.min.js"></script>
+	<script>
+	$(function() {
+		$( ".datepicker" ).datepicker();
+	});
+	</script>
+</head>
+<body>
+
+
+<div id="1">
+<input type="text" class="datepicker" onchange="funa(this.value);">
+</div>
+
+
+<script type="text/javascript">
+
+function funa(a)
+{
+   alert(a);
+}
+  ca7 = document.getElementById("1");
+  mybox=document.createElement("input");
+  mybox.type="text";
+  mybox.name="rdate[]";
+  mybox.id = "rdate";
+  //mybox.value="<?php echo date("d.m.o"); ?>";
+  //mybox.onfocus = function ()  \{  displayCalendar(document.getElementById(this.id),'dd.mm.yyyy',this);  \};\par
+  mybox.size="15";
+  mybox.setAttribute("class","datepicker");
+  ca7.appendChild(mybox);
+
+</script>
+</body>
+</html>

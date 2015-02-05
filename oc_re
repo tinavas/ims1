@@ -1,0 +1,347 @@
+<?php 
+include "jquery.php"; 
+include "config.php"; 
+include "getemployee.php";
+
+if(!isset($_GET['warehouse']))
+$warehouse = "";
+else
+$warehouse = $_GET['warehouse'];
+
+if(!isset($_GET['party']))
+$party = "";
+else
+$party = $_GET['party'];
+
+if(!isset($_GET['ps']))
+$ps = "";
+else
+{
+$ps = $_GET['ps'];
+}
+
+$date1 = date("d.m.Y"); 
+$strdot1 = explode('.',$date1); 
+$ignore = $strdot1[0]; 
+$m = $strdot1[1];
+$y = substr($strdot1[2],2,4);
+$query1 = "SELECT MAX(cobiincr) as cobiincr FROM oc_cobi where m = '$m' AND y = '$y' ORDER BY date DESC";
+$result1 = mysql_query($query1,$conn); $cobiincr = 0; 
+while($row1 = mysql_fetch_assoc($result1)) 
+$cobiincr = $row1['cobiincr']; 
+$cobiincr = $cobiincr + 1;
+if ($cobiincr < 10) 
+$cobi = 'COBI-'.$m.$y.'-000'.$cobiincr.$code; 
+else if($cobiincr < 100 && $cobiincr >= 10) 
+$cobi = 'COBI-'.$m.$y.'-00'.$cobiincr.$code; 
+else $cobi = 'COBI-'.$m.$y.'-0'.$cobiincr.$code;
+?>
+
+<br />
+<center>
+
+
+<h1>Customer Order Based Invoice</h1>
+<br/>
+<br/><br />
+<form id="form1" name="form1" method="post" <?php if($_SESSION['db'] == "central" or $_SESSION['db'] == "alwadi") { echo "action='oc_savecobic.php'"; } else { ?> action="oc_savecobi.php" <?php } ?>>
+<input type="hidden" name="cobiincr" id="cobiincr" value="<?php echo $cobiincr; ?>"/>
+		<input type="hidden" name="m" id="m" value="<?php echo $m; ?>"/>
+		<input type="hidden" name="y" id="y" value="<?php echo $y; ?>"/>
+<table>
+<tr>
+<td align="right"><strong>Warehouse</strong></td>
+			   <td align="left">
+			    <select id="warehouse" name="warehouse" style="width:120px;" onchange="loadparty(this.value);">
+				<option value="">-Select-</option>
+				<?php
+				$query = "SELECT distinct(warehouse) FROM oc_packslip WHERE flag = 1 AND cobiflag = 0 ORDER By warehouse";
+				$result = mysql_query($query,$conn) or die(mysql_error());
+				while($rows = mysql_fetch_assoc($result))
+				{
+				 ?>
+				 <option value="<?php echo $rows['warehouse']; ?>" title="<?php echo $rows['warehouse']; ?>" <?php if($warehouse == $rows['warehouse']) { ?> selected="selected" <?php } ?>><?php echo $rows['warehouse']; ?></option>
+				 <?php
+				}
+				?>
+				</select>
+				</td>
+<td width="5px"></td>
+
+<td><strong>Party</strong>&nbsp;&nbsp;&nbsp;</td>
+<td align="left"><select id="party" name="party" style="width:180px" onchange="fun1(this.value);">
+             <option>-Select-</option>
+           <?php  $q = "select distinct(party) from oc_packslip where flag = '1' AND cobiflag <> '1' order by party"; $qrs = mysql_query($q,$conn) or die(mysql_error());
+  		         while($qr = mysql_fetch_assoc($qrs)) { ?>
+        <option value="<?php echo $qr['party']; ?>" <?php if($party == $qr['party']) { ?> selected="selected" <?php } ?>><?php echo $qr['party']; ?></option>
+       <?php } ?>
+     </select></td>
+<td width="5px"></td>
+<td title="Pack Slip No."><strong>PS #</strong>&nbsp;&nbsp;&nbsp;</td>
+<td align="left"><select id="ps" name="ps" style="width:120px" onchange="fun(this.value);">
+             <option>-Select-</option>
+           <?php  $q = "select distinct(ps) from oc_packslip WHERE party = '$party' and flag = '1' AND cobiflag <> '1' order by ps"; $qrs = mysql_query($q,$conn) or die(mysql_error());
+  		         while($qr = mysql_fetch_assoc($qrs)) { ?>
+        <option value="<?php echo $qr['ps']; ?>" <?php if($ps == $qr['ps']) { ?> selected="selected" <?php } ?>><?php echo $qr['ps']; ?></option>
+       <?php } ?>
+     </select></td>
+<td width="5px"></td>
+</tr>
+<tr height="10px"></tr>
+<tr>
+<td><strong>Invoice #</strong>&nbsp;&nbsp;&nbsp;</td>
+<?php //if($ps != "") { ?>
+<td><input type="text" style="background:none; border:none;" size="18"  id="invoice" name="invoice" value="<?php echo $cobi; ?>" readonly/></td>
+<td width="5px"></td>
+<?php //} ?>
+<?php
+$query1 = "select date,so from oc_packslip where ps = '$ps' group by itemcode order by itemcode"; $result1 = mysql_query($query1,$conn) or die(mysql_error());
+	if($row1 = mysql_fetch_assoc($result1)) $date1= $row1['date'];?>
+
+<td align="right"><strong>Date&nbsp;&nbsp;&nbsp;</strong></td>
+<td align="left"><input type="text" id="date" name="date" class="datepicker" value="<?php echo date("d.m.Y",strtotime($date1)); ?>" size="9"/></td>
+<td width="5px"></td>
+<td title="Book Invoice No."><strong>Book #</strong>&nbsp;&nbsp;&nbsp;</td>
+<td align="left"><input type="text" size="5"  id="invoice1" name="invoice1" value="" /></td>
+<td width="5px"></td>
+<?php if($_SESSION['db'] == "albustanlayer") { ?>
+<td><strong>Sales Person</strong>&nbsp;&nbsp;&nbsp;</td>
+<td align="left">
+<select id="salesperson" name="salesperson" style="width:150px">
+<?php
+$query1 = "select salesperson from oc_packslip where ps = '$ps' and party = '$party'";
+				  $result1 = mysql_query($query1,$conn) or die(mysql_error());
+				  $rows1 = mysql_fetch_assoc($result1);
+				  $salesperson = $rows1['salesperson'];
+				  ?><option value="<?php echo $rows1['salesperson'];?>"><?php echo $rows1['salesperson'];?></option>
+				
+</select>				
+</td>
+<?php } ?>
+</tr>
+</table>
+<br />
+<br />
+<?php if($ps != "") { ?>
+<table align="center">
+<tr>
+<th><strong>S.No</strong></th>
+<th width="10px"></th>
+<th><strong>Item</strong></th>
+<th width="10px"></th>
+<th><strong>Description</strong></th>
+<th width="10px"></th>
+<th><strong>Sent Quantity</strong></th>
+<th width="10px"></th>
+<th><strong>Units</strong></th>
+<th width="10px"></th>
+<th><strong>Price/Unit</strong></th>
+<th width="10px"></th>
+<?php if($_SESSION['tax']!=0) { ?><th><strong>Tax Amount</strong></th>
+<th width="10px"></th><?php } ?>
+<th><strong>Freight Amount</strong></th>
+<th width="10px"></th>
+<th><strong>Discount Amount</strong></th>
+<th width="10px"></th>
+<th><strong>Total Amount</strong></th>
+<th width="10px"></th>
+<th><strong>CoA Code</strong></th>
+<th width="10px"></th>
+</tr>
+<tr style="height:20px"></tr>
+<?php $count=1; $i = 1; $sum = 0; 
+if($row1[so]!='withoutso')
+$query1 = "select * from oc_packslip where ps = '$ps' order by itemcode"; 
+else
+$query1 = "select so,itemcode,description,sum(quantity) as quantity,units,remarks from oc_packslip where ps = '$ps' group by itemcode order by itemcode"; 
+$result1 = mysql_query($query1,$conn) or die(mysql_error());
+	while($row1 = mysql_fetch_assoc($result1)) { 
+	$remarks=$row1[remarks];
+	
+	if($row1[so]!='withoutso') {
+      $freight = $row1['freightamount']; $brokerage = $row1['brokerageamount']; $pocost = $row1['pocost']; ?>
+	  
+<input type="hidden" id="taxcode" name="taxcode[]" value="<?php echo $row1['taxcode']; ?>" />
+<input type="hidden" id="taxvalue" name="taxvalue[]" value="<?php echo $row1['taxvalue']; ?>" />
+<input type="hidden" id="taxformula" name="taxformula[]" value="<?php echo $row1['taxformula']; ?>" />
+
+<input type="hidden" id="freightcode" name="freightcode[]" value="<?php echo $row1['freightcode']; ?>" />
+<input type="hidden" id="freightvalue" name="freightvalue[]" value="<?php echo $row1['freightvalue']; ?>" />
+<input type="hidden" id="freightformula" name="freightformula[]" value="<?php echo $row1['freightformula']; ?>" />
+
+<input type="hidden" id="brokeragecode" name="brokeragecode[]" value="<?php echo $row1['brokeragecode']; ?>" />
+<input type="hidden" id="brokeragevalue" name="brokeragevalue[]" value="<?php echo $row1['brokeragevalue']; ?>" />
+<input type="hidden" id="brokerageamount" name="brokerageamount[]" value="<?php echo $row1['brokerageamount']; ?>" />
+<input type="hidden" id="brokerageformula" name="brokerageformula[]" value="<?php echo $row1['brokerageformula']; ?>" />
+
+<input type="hidden" id="discountcode" name="discountcode[]" value="<?php echo $row1['discountcode']; ?>" />
+<input type="hidden" id="discountvalue" name="discountvalue[]" value="<?php echo $row1['discountvalue']; ?>" />
+<input type="hidden" id="discountformula" name="discountformula[]" value="<?php echo $row1['discountformula']; ?>" />
+
+<tr>
+<td><input type="text" id="sno<?php echo $i; ?>" size="4" name="sno[]" value="<?php echo " ".$i; ?>" style="text-align:right;background:none; border:none" readonly/></td>
+<td width="10px"></td>
+<td><input type="text" id="itemcode<?php echo $i; ?>" size="6" name="itemcode[]" value="<?php echo $row1['itemcode']; ?>" style="text-align:center;background:none; border:none" readonly/></td>
+<td width="10px"></td>
+<td><input type="text" id="description<?php echo $i; ?>" size="15" name="description[]" value="<?php echo $row1['description']; ?>" style="text-align:center;background:none; border:none" readonly/></td>
+<td width="10px"></td>
+<td><input type="text" id="sentquantity1<?php echo $i; ?>" size="10" name="sentquantity1[]" value="<?php echo changeprice1($row1['quantity']); ?>" style="text-align:right;background:none;border:none" readonly /></td>
+
+<input type="hidden" id="sentquantity<?php echo $i; ?>" size="10" name="sentquantity[]" value="<?php echo $row1['quantity']; ?>" />
+
+<td width="10px"></td>
+<td><input type="text" id="units<?php echo $i; ?>" size="10" name="units[]" value="<?php echo $row1['units']; ?>" style="text-align:center;background:none; border:none" readonly /></td>
+<td width="10px"></td>
+<td>
+<input type="text" id="price1<?php echo $i; ?>" size="8" name="price1[]" value="<?php echo changeprice($row1['rateperunit']); ?>" style="text-align:right;background:none;border:none" readonly />
+
+<input type="hidden" id="price<?php echo $i; ?>" size="8" name="price[]" value="<?php echo $row1['rateperunit']; ?>" />
+</td>
+<td width="10px"></td>
+<td align="center">
+<input type="text" size="6" name="taxamount1[]" id="taxamount1<?php echo $i; ?>" value="<?php echo changeprice($row1['taxamount']); ?>" style="text-align:right;background:none;border:none" readonly /></td>
+<input type="hidden" size="6" name="taxamount[]" id="taxamount<?php echo $i; ?>" value="<?php echo $row1['taxamount']; ?>" />
+<td width="10px"></td>
+<td align="center">
+<input type="text" size="6" name="freightamount1[]" id="freightamount1<?php echo $i; ?>" value="<?php echo changeprice($row1['freightamount']); ?>" style="text-align:right;background:none;border:none" readonly /></td>
+<input type="hidden" size="6" name="freightamount[]" id="freightamount<?php echo $i; ?>" value="<?php echo $row1['freightamount']; ?>" />
+<td width="10px"></td>
+<td align="center">
+<input type="text" name="discountvalue1[]" size="6" id="discountvalue1<?php echo $i; ?>" value="<?php echo changeprice($row1['discountamount']); ?>" style="text-align:right;background:none;border:none" readonly />
+<input type="hidden" name="discountamount[]" size="6" id="discountamount<?php echo $i; ?>" value="<?php echo $row1['discountamount']; ?>" />
+</td>
+<td width="10px"></td>
+<td>
+<input type="text" id="total1<?php echo $i; ?>" size="15" name="total1[]" value="<?php echo changeprice($row1['totalcost']); ?>" style="text-align:right;background:none; border:none" readonly/>
+<input type="hidden" id="total<?php echo $i; ?>" size="15" name="total[]" value="<?php echo $row1['totalcost']; ?>" />
+</td>
+<td width="10px"></td>
+<td><select id="coacode<?php echo $i; ?>" name="coacode[]" style="width:70px">
+             <option value="T">-Select-</option>
+           <?php  $query5 = "select * from ac_coa WHERE controltype = 'Customer A/c' order by code"; 
+		   		  $result5 = mysql_query($query5,$conn) or die(mysql_error());
+				  $i = 0;
+  		         while($row5 = mysql_fetch_assoc($result5)) { $i++; ?>
+        <option title="<?php echo $row5['description']; ?>" value="<?php echo $row5['code']; ?>" <?php if($i == 1) { echo "selected='selected'"; } ?>><?php echo $row5['code']; ?></option>
+       <?php } ?>
+     </select></td>
+</tr>
+<tr style="height:10px"></tr>
+
+
+<?php }
+else
+{
+?>
+<tr>
+<td><input type="text" id="sno<?php echo $i; ?>" size="4" name="sno[]" value="<?php echo " ".$i; ?>" style="text-align:right;background:none; border:none" readonly/></td>
+<td width="10px"></td>
+<td><input type="text" id="itemcode<?php echo $i; ?>" size="6" name="itemcode[]" value="<?php echo $row1['itemcode']; ?>" style="text-align:center;background:none; border:none" readonly/></td>
+<td width="10px"></td>
+<td><input type="text" id="description<?php echo $i; ?>" size="15" name="description[]" value="<?php echo $row1['description']; ?>" style="text-align:center;background:none; border:none" readonly/></td>
+<td width="10px"></td>
+<td><input type="text" id="sentquantity1<?php echo $i; ?>" size="10" name="sentquantity1[]" value="<?php echo changeprice1($row1['quantity']); ?>" style="text-align:right;background:none;border:none" readonly /></td>
+
+<input type="hidden" id="sentquantity@<?php echo $i; ?>" size="10" name="sentquantity[]" value="<?php echo $row1['quantity']; ?>" />
+
+<td width="10px"></td>
+<td><input type="text" id="units<?php echo $i; ?>" size="10" name="units[]" value="<?php echo $row1['units']; ?>" style="text-align:center;background:none; border:none" readonly /></td>
+<td width="10px"></td>
+<td align="right">
+<input style="text-align:right;"  onkeyup="calculate(this.id)" id="price@<?php echo $i; ?>" size="8" name="price[]" value="0" />
+</td>
+<td width="10px"></td>
+<?php if($_SESSION['tax']!=0) { ?>
+<td align="right">
+<input style="text-align:right;" onkeyup="calculate(this.id)"  size="6" name="taxamount[]" id="taxamount@<?php echo $i; ?>" value="0" /> </td>
+<td width="10px"></td>
+<?php } ?>
+<td align="right">
+<input style="text-align:right;"  onkeyup="calculate(this.id)"  size="6" name="freightamount[]" id="freightamount@<?php echo $i; ?>" value="0" /></td>
+<td width="10px"></td>
+<td align="right">
+<input style="text-align:right;"  onkeyup="calculate(this.id)"  name="discountamount[]" size="6" id="discountamount@<?php echo $i; ?>" value="0" />
+</td>
+<td width="10px"></td>
+<td align="right">
+<input style="text-align:right;"  id="total@<?php echo $i; ?>" style="text-align:center;background:none; border:none" readonly size="15" name="total[]" value="<?php echo $row1['totalcost']; ?>" />
+</td>
+<td width="10px"></td>
+<td><select id="coacode<?php echo $i; ?>" name="coacode[]" style="width:70px">
+             <option value="T">-Select-</option>
+           <?php  $query5 = "select * from ac_coa WHERE controltype = 'Customer A/c' order by code"; 
+		   		  $result5 = mysql_query($query5,$conn) or die(mysql_error());
+				  $i = 0;
+  		         while($row5 = mysql_fetch_assoc($result5)) { $i++; ?>
+        <option title="<?php echo $row5['description']; ?>" value="<?php echo $row5['code']; ?>" <?php if($i == 1) { echo "selected='selected'"; } ?>><?php echo $row5['code']; ?></option>
+       <?php } ?>
+     </select></td>
+</tr>
+<tr style="height:10px"></tr>
+<?php
+} 
+  $count++;
+  $i++;} ?>
+<input type="hidden" name="i" id="i" value="<?php echo $i; ?>" />
+<tr style="height:10px"></tr>
+
+<tr style="height:20px"></tr>
+<tr align="center">
+<td colspan="18" align="right">
+<strong>Grand Total</strong>
+</td>
+<td>
+<input style="text-align:right;background:none; border:none" type="text" id="finaltotal" size="15" name="finaltotal" value="<?php echo changeprice($pocost); ?>" readonly />
+<input type="hidden" id="finaltotal1" size="15" name="finaltotal1" value="<?php echo $pocost; ?>"/>
+</td>
+</tr>
+<tr><td align="center" colspan="18" ><strong>Narration</strong> <textarea cols="40" name="remarks"><?php echo $remarks; ?></textarea></td><tr>
+<tr>
+<td colspan="18" align="center">
+<input type="submit" id="save" value="Save" /> <input type="button" id="cancel" value="Cancel" onClick="document.location='dashboardsub.php?page=oc_cobi'"/>
+</td>
+</tr>
+<?php } ?>
+</table>
+</form>
+</center>
+<script language="JavaScript" type="text/javascript">
+
+function calculate(id)
+{
+id=id.split('@');
+index=id[1];
+var total=0;
+var alltotal=0;
+total+=parseFloat(document.getElementById('sentquantity@'+index).value*document.getElementById('price@'+index).value);
+total+=parseFloat(document.getElementById('freightamount@'+index).value);
+<?php if($_SESSION['tax']!=0) { ?> total+=parseFloat(document.getElementById('taxamount@'+index).value); <?php } ?>
+total-=parseFloat(document.getElementById('discountamount@'+index).value);
+document.getElementById('total@'+index).value=Math.round(parseFloat(total)*100)/100;
+
+for(var i=<?php echo $count-1; ?>;i>0;i--) 
+  alltotal+=parseFloat(document.getElementById('total@'+i).value); 
+ 
+
+document.getElementById('finaltotal').value=Math.round(parseFloat(alltotal)*100)/100;
+document.getElementById('finaltotal1').value=Math.round(parseFloat(alltotal)*100)/100;
+}
+
+
+function loadparty(a)
+{
+ document.location = "dashboardsub.php?page=oc_addcobi&warehouse=" + a;
+}
+
+function fun1(party)
+{
+	var warehouse = document.getElementById('warehouse').value;
+	document.location = "dashboardsub.php?page=oc_addcobi&party=" + party + "&warehouse=" + warehouse;
+}
+function fun(ps)
+{
+    var party = document.getElementById("party").value;
+	var warehouse = document.getElementById('warehouse').value;
+	document.location = "dashboardsub.php?page=oc_addcobi&party=" + party + "&ps=" + ps + "&warehouse=" + warehouse;
+}
+</script>

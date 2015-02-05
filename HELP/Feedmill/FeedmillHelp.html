@@ -1,0 +1,114 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Tulasi Technologies</title>
+</head>
+
+<body style="font-family:Verdana, Arial, Helvetica, sans-serif; font-size:11px">
+<p align="center" style="color:#FF0000;"><i>" The below file can be downloaded or printed helping the user to view the whole module. "</i></p>
+<p align="right">
+<a href="http://bims1.spectacularsys.com/dashboard.php?page=" style="color:#FFFFFF"><img src="../home-48x48.png"" width="48" height="48" title="HOME"/></a>&nbsp;&nbsp;&nbsp;
+<a href="FeedmillHelp.Zip" style="color:#FFFFFF"><img src="../download.jpg"" width="48" height="48" title="Download Word Document"/></a>&nbsp;&nbsp;&nbsp;
+<a href="javascript:window.print()" style="color:#FFFFFF"><img src="../printer.bmp" width="48" height="48" title="Print this page"/></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+
+<div id="Top" >
+<!--<ol>Order To Cash</ol> -->
+<B ><h3><center>Index</center></h3></B>
+<ol>
+<li><font style="font-weight:bold; font-size:14px"><a href="#masters">Masters</a></font>
+
+<ul id="feedstd"><a href="#feedmill_addfeedstd" >Feed Standards</a></ul>
+
+</li>
+<li><font style="font-weight:bold; font-size:14px"><a href="#transactions">Transactions</a></font>
+
+<ul id="#feedformula"><a href="#feedmill_addfeedformula">Feed Formula</a></ul>
+</li>
+<li><font style="font-weight:bold; font-size:14px"><a href="#processing">Processing</a></font>
+<ul id="addproduction"><a href="#feedmill_addproduction">Production Unit</a></ul>
+</li>
+
+</ol>
+
+<br>
+<br>
+<div id="masters" style="font-weight:bold; font-size:16px; text-decoration:underline">Masters</div>
+<div style="float:right"> <a href="#Top"><font style="color:#FF0000">Top</font></a></div> 
+<div  id="feedmill_addfeedstd">
+
+
+<p><b>Add New Feed Standards</b></p>
+<ol><b>
+
+</b></ol>
+<ol>
+<li>Select values for "Feed Type"(whose description can be seen on mouse over), "Nutrient" and "Standard Value for 1 Kg".<br/>
+As and when the value of "Nutrient" is selected the value of "Units" is displayed automatically.</li>
+<br/>
+<br>
+<b>Eg :</b> Suppose for Feed Type "Breeder Grower Mash" with code "FD101" the Standard Value for 1 Kg of Nutrient "Vitamin C" is "0.25kg" then,<br/>
+You have to select <em style="color:#0066FF">FD101</em> for "Feed Type" and <em style="color:#0066FF">Vitamin C</em> for "Nutrient".<br/>
+As and when Vitamin C is selected <em style="color:#0066FF">mg/kg</em> will be displayed for "Unit".<br/>
+Now enter <em style="color:#0066FF">0.25</em> for "Standard Value for 1 Kg".
+<li>Repeat the above step till required values are filled.</li>
+<li>Once filled click "SAVE" button to save the Feed Standards or click "CANCEL" button to exit without saving the Feed Standards.</li>
+</ol>
+<b>NOTE : </b>You can directly add a New Nutrient click the <b><em style="color:#00CC33; font-size: 24px">+</em></b> icon and enter the Values for "Nutrient" and "Units".
+</div>
+
+<br>
+<br>
+<div id="transactions" style="font-weight:bold; font-size:16px; text-decoration:underline">Transactions</div>
+<div style="float:right"> <a href="#Top"><font style="color:#FF0000">Top</font></a></div> 
+<div id="feedmill_addfeedformula">
+<br/>
+
+<p><b>Add New Feed Formula</b></p>
+<p><b>Pre-requisites : </b>"Item Codes" should be created.</p>
+<ol><b><p>To Add a New Feed Formula</p></b></ol>
+<ol>
+<li>Select values for "Feed Mill", "Date", "Type of Feed"(whose description can be seen on mouse over).</li>
+<br/>
+<br>
+<b>Eg : </b>Suppose the Feed Mill name is "SSPC FeedMill", Date of creation of Formula is "4th JAN, 2011" and Type Of Feed is "FD101" you have to select <em style="color:#0066FF">04.01.2011</em> for "Date", <em style="color:#0066FF">SSPC FeedMill</em> for "Feed Mill" and <em style="color:#0066FF">FD101</em> for "Type Of Feed".
+<li>Enter the values of "Formula Name" and "Kgs/Bag" in the appropriate boxes provided.</li><br/>
+Suppose if the Formula Name is "Chick 04-01-2011" and Kgs/Bag is "50" you have to enter <em style="color:#0066FF">Chick 04-01-2011</em> for "Formula Name" and <em style="color:#0066FF">50</em> for Kgs/Bag.
+<li>Now select value for "Item Code" and enter "Quantity" of Item.<br/>
+As and when the Item Code is selected the "description" of the Item is displayed automatically.</li>
+<li>Repeat the above step 3 until all the Items in Feed Formula are filled.</li>
+<br/>
+<img src="Images/addfeedfor1.jpg" width="800" height="700" />
+<br/>
+<li>Once filled click "SAVE" button to Save the Feed Formula or click "CANCEL" button to exit without Saving the Feed Formula.</li></ol>
+</div>
+
+<br>
+<br>
+<div id="processing" style="font-weight:bold; font-size:16px; text-decoration:underline">Processing</div>
+<div style="float:right"> <a href="#Top"><font style="color:#FF0000">Top</font></a></div> 
+<div id="feedmill_addproduction">
+
+
+
+<p><b>Add New Production</b></p>
+<p><b>Pre-requisites : </b>"Feed Formula" should be created.</p>
+<ol><b><p>To Add a New Production</p></b></ol>
+<ol>
+<li>Select values for "Entry Date", "Feed Mill", "Feed Type"(whose description can be seen on mouse over), "Formula. #" and enter value for "Batches".<br/>
+As and when the value for "Batches" is entered the "Statistics" will be displayed automatically depending on the selected "Formula. #".</li>
+<br/>
+<br>
+<b>Eg : </b>Suppose if the Entry Date is "5th Jan, 2011", Feed Mill is "SSPC FeedMill", Feed Type is "FD101", Formula. # is "Chick 04.01.2011" and Batches is "10" , <br/>
+You have to select <em style="color:#0066FF">05.01.2011</em> for "Entry Date", <em style="color:#0066FF">SSPC FeedMill</em> for "Feed Mill", <em style="color:#0066FF">FD101</em> for "Feed Type", <em style="color:#0066FF">Chick 04.01.2011</em> for "Formula. #" and enter <em style="color:#0066FF">10</em> for "Batches". 
+<li>Now enter the values of "Actual Production", "Bag Type", "Labour Charges", "Units", "Cost/Unit", "Packing", "Transport" and "Other".  As and when the Bag Type is selected "No of Bags" will be displayed automatically.</li>
+<br/>
+Now suppose if the actual Production is "10035", Labour Charges is "350", Units is "12", Cost/Unit is "4", Packing is "50",Transport is "100" and Other is "20",<br/>
+you have to enter <em style="color:#0066FF">10035</em> for "Actual Production", <em style="color:#0066FF">350</em> for "Labour Charges", <em style="color:#0066FF">12</em> for "Units", <em style="color:#0066FF">4</em> for "Cost/Unit", <em style="color:#0066FF">50</em> for "Packing", <em style="color:#0066FF">100</em> for "Transport" and <em style="color:#0066FF">20</em> for "Other".
+<br/>
+<img src="Images/addproduction.jpg" width="900"/>   
+<li>Once filled click "SAVE" button to Save the Production or click "CANCEL" button to exit without Saving the Production.</li></ol>
+</div>
+
+</body>
+</html>
