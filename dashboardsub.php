@@ -18,7 +18,7 @@ $userlogged = $_SESSION['valid_user'];
 <html lang="en">
 <head>
 
-	<title>Tulasi Technologies -S.M.O.C</title>
+	<title>Tulasi Technologies -S.M.O.C.trial</title>
 	<meta charset="utf-8">
 		<SCRIPT LANGUAGE="JavaScript">
 NavName = navigator.appName.substring(0,3);
