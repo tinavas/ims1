@@ -11,7 +11,7 @@
       <tbody>
         <tr>
           <th SCOPE="col" VALIGN="middle" HEIGHT="58">
-            <h1> Welcome to SMOC </h1>
+            <h1> Welcome to SMOC Trial </h1>
           </th>
        </tr>
       </tbody>
