@@ -16,7 +16,7 @@ $amount123 = $qr['amount'];
  $date12 = $qr['date'];
  $coacode = $qr['coacode'];
  $crdr = $qr['crdr'];
-$warehouse = $qr['warehouse1'];
+$warehouse = $qr['warehouse'];
 
 
 
